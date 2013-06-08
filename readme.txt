@@ -2,6 +2,8 @@ readme.txt
 
 Code and data for the second round of a Jstor collaboration between Andrew Goldstone and Ted Underwood.
 
+tmhls = "topic-modeling and the history of literary scholarship."
+
 THE STOPLIST
 
 I've recreated the stopword list from sources. Right now it's at an intermediate stage. There are a lot of ambiguous cases in two special categories below (inGoldstone and inUnderwood). We may want to frame a general policy about what to include before I try to sort those out manually.
