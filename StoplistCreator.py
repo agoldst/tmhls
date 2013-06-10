@@ -121,7 +121,7 @@ for line in filelines:
 
 categories = ['alphabet', 'englishfunction', 'inGoldstone', 'inUnderwood', 'french', 'german', 'italian', 'latin', 'spanish', 'romannumeral', 'name']
 
-with open("stoplist.txt", mode="a", encoding = 'utf-8') as file:
+with open("stoplist.tsv", mode="a", encoding = 'utf-8') as file:
     for category in categories:
         thiscat = list()
         for key, value in stoplist.items():
