@@ -1,13 +1,16 @@
 """final_list.py
 
 Read in the annotated dubiousStopwords.txt,
-then output stoplist.txt by filtering stoplist.tsv accordingly.
+then output a final stoplist by filtering stoplist.tsv accordingly.
 
 """
+dubiousfile_name = "dubiousStopwords.txt"
+stopcats_name = "stoplist.tsv"
+outfile_name = "stoplist_final.txt"
 
 discard = dict()
 keepers = 0
-with open("dubiousStopwords.txt") as f:
+with open(dubiousfile_name) as f:
     for line in f:
         fields = line.split()
         try:
@@ -22,9 +25,9 @@ with open("dubiousStopwords.txt") as f:
 print "Read {} dubious stopword lines; {} keepers".format(len(discard),keepers)
 
 
-output = open("stoplist.txt",mode="w")
+output = open(outfile_name,mode="w")
 discards = 0
-with open("stoplist.tsv") as f:
+with open(stopcats_name) as f:
     for line in f:
         w, category = line.split()
         if category == "inGoldstone" or category == "inUnderwood":
@@ -40,8 +43,8 @@ with open("stoplist.tsv") as f:
 
 output.close()
 print """
-Wrote stoplist.txt from stoplist.tsv, discarding {} dubious words
-""".format(discards)
+Wrote {} from {}, discarding {} dubious words
+""".format(outfile_name,stopcats_name,discards)
 
 
 
