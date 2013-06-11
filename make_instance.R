@@ -1,8 +1,8 @@
 prune_filelist <- function(files,metadata,aquo,adquem,types="fla\t") {
     # apply cutoff dates
-    keep_ids <- metadata$id[metadata$date >= as.Date(aquo) &&
-                            metadata$date <= as.Date(adquem) &&
-                            metadata$type %in% types])
+    keep_ids <- metadata$id[metadata$date >= as.Date(aquo) &
+                            metadata$date <= as.Date(adquem) &
+                            metadata$type %in% types]
     files[as.id(files) %in% keep_ids]
 }
 
@@ -46,7 +46,6 @@ rare_token_report <- function(counts,freq_threshold,plotsfile="freqplots.png") {
     pushViewport(viewport(layout=grid.layout(1,2)))
   
     freqdist <- qplot(Freq / total,data=ovf,geom="bar",log="x",fill=keep,
-                      binwidth=diff(range(Freq)) / (total * 25),
                       xlab="frequency",
                       ylab="number of word types",
                       main="Types") +
@@ -83,6 +82,7 @@ make_instance_main <- function() {
     # "includes"
     source("~/Developer/dfr-analysis/source_all.R")
     library(ggplot2)
+    library(grid)
     pwd <- getwd()
     setwd("~/Documents/research/20c/hls/dfr-data")
 
@@ -95,12 +95,17 @@ make_instance_main <- function() {
                   "pmla_all",
                   "res1925-1980",
                   "res1981-2012")
-    #dfr_dirs <- "~/Developer/dfr-analysis/test_data/pmla_sample"
+    # or for faster testing, uncomment:
+    # dfr_dirs <- "~/Developer/dfr-analysis/test_data/pmla_sample"
 
     aquo <- as.Date("1905-01-01")
     adquem <- as.Date("2004-12-31")
     itemtypes <- "fla\t"
+    
+    # this should be pretty moderate
     freq_threshold=1e-7
+    # this would be more aggressive
+    # freq_threshold=1e-5
 
     outdir <- "out"
 
