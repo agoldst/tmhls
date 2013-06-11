@@ -1,5 +1,5 @@
 source("~/Developer/dfr-analysis/source_all.R")
-
+library(ggplot2)
 setwd("~/Documents/research/20c/hls/dfr-data")
 
 prune_filelist <- function(files,metadata,aquo,adquem,types="fla\t") {
@@ -35,32 +35,50 @@ get_counts <- function(dirs,
 
 }
  
-rare_token_report <- function(counts,freq_threshold,
-                              plot_filename="wordfreq_dist.png") {
+rare_token_report <- function(counts,freq_threshold,plotsfile="freqplots.png") {
 
     overall <- with(counts,table(rep(WORDCOUNTS,times=WEIGHT)))
 
     total <- sum(overall)
-    freq_threshold <- 1e-5
-    freqdist <- qplot(Freq / total,data=as.data.frame(overall),
-                      stat="ecdf",geom="step",log="x",
+    ovf <- as.data.frame(overall)
+    ovf$keep <- ovf$Freq / total > freq_threshold
+    
+    png(plotsfile,width=800,height=600)
+    grid.newpage()
+    pushViewport(viewport(layout=grid.layout(1,2)))
+  
+    freqdist <- qplot(Freq / total,data=ovf,geom="bar",log="x",fill=keep,
                       xlab="frequency",
                       ylab="number of word types",
-                      main="Cumulative distribution of total word frequencies") 
-    freqdist <- freqdist +
-        geom_vline(xintercept=freq_threshold,color="red") +
-        geom_text(label="frequency cutoff",x=freq_threshold,y=0.5,hjust=0)
-    ggsave("wordfreq_dist.png",plot=freqdist)
+                      main="Types") +
+        theme(legend.position="none")
+    
+    tokdist <- freqdist + geom_bar(aes(weight=Freq)) +
+        ylab("token count") + ggtitle("Tokens")
 
+    print(freqdist,vp=viewport(layout.pos.row=1,layout.pos.col=1))
+    print(tokdist,vp=viewport(layout.pos.row=1,layout.pos.col=2))
+    dev.off()
+    
+    message("Plots saved to ",plotsfile)
+    
+    types_frac <- 1 - ecdf(overall)(freq_threshold * total)
+    types_total <- length(overall)
+    types_msg <- sprintf("%.0f of %.0f types (%.3f)",
+                         types_frac * types_total,types_total,types_frac)
+    
+    tokens_count <- sum(overall[overall >= freq_threshold * total])
+    tokens_msg <- sprintf("%.0f of %.0f tokens (%.3f)",
+                         tokens_count,total,tokens_count / total)
     message("A frequency threshold of ",freq_threshold,
             " or > ",floor(freq_threshold * total)," tokens\n",
-            "leaves ",1 - ecdf(overall)(freq_threshold * total),
-            " of word types and ",
-            sum(overall[overall >= freq_threshold * total]) / total,
-            " of word tokens")
+            "leaves ",types_msg," and ",tokens_msg)
+    
+    freqdist
 }
 # main script: parameters
 
+dont.do <- function() {
 dfr_dirs <- c("elh_ci_all",
               "mlr1905-1970",
               "mlr1971-2013",
@@ -69,24 +87,32 @@ dfr_dirs <- c("elh_ci_all",
               "pmla_all",
               "res1925-1980",
               "res1981-2012")
-
+}
+dfr_dirs <- "~/Developer/dfr-analysis/test_data/pmla_sample"
 
 aquo <- as.Date("1905-01-01")
 adquem <- as.Date("2004-12-31")
 itemtypes <- "fla\t"
 freq_threshold=1e-5
 
-outfile <- "journals.mallet"
+outdir <- "out"
+
+plotfile <- file.path(outdir,"freqplots.png")
+outfile <- file.path(outdir,"journals.mallet")
 stoplist_file <- "../external-repo/tmhls/stoplist_final.txt"
 
 # main script: commands
+
+if(!file.exists(outdir)) {
+  dir.create(outdir)
+}
 
 counts <- get_counts(dfr_dirs,
                      aquo,
                      adquem,
                      itemtypes)
 
-rare_token_report(counts,freq_threshold)
+rare_token_report(counts,freq_threshold,plotfile)
 
 message("Read ",nrow(counts)," rows\n",
         "Removing word types with corpus frequency < ",freq_threshold)
