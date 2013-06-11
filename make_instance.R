@@ -31,7 +31,7 @@ get_counts <- function(dirs,
  
 rare_token_report <- function(counts,freq_threshold,plotsfile="freqplots.png") {
 
-    message("Aggregating token counts...")
+    message("Aggregating token counts into overall counts")
 
     overall <- with(counts,table(rep(WORDCOUNTS,times=WEIGHT)))
 
