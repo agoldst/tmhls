@@ -78,7 +78,6 @@ rare_token_report <- function(counts,freq_threshold,plotsfile="freqplots.png") {
 }
 # main script: parameters
 
-dont.do <- function() {
 dfr_dirs <- c("elh_ci_all",
               "mlr1905-1970",
               "mlr1971-2013",
@@ -87,8 +86,7 @@ dfr_dirs <- c("elh_ci_all",
               "pmla_all",
               "res1925-1980",
               "res1981-2012")
-}
-dfr_dirs <- "~/Developer/dfr-analysis/test_data/pmla_sample"
+#dfr_dirs <- "~/Developer/dfr-analysis/test_data/pmla_sample"
 
 aquo <- as.Date("1905-01-01")
 adquem <- as.Date("2004-12-31")
