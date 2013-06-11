@@ -111,6 +111,13 @@ make_instance_main <- function() {
 
     plotfile <- file.path(outdir,"freqplots.png")
     outfile <- file.path(outdir,"journals.mallet")
+
+    message("regenerating stoplist_final.txt")
+
+    setwd("../external-repo/tmhls/")
+    system("python stoplist_final.py",ignore.stdout=T,ignore.stderr=T)
+    setwd("~/Documents/research/20c/hls/dfr-data")
+
     stoplist_file <- "../external-repo/tmhls/stoplist_final.txt"
 
     # main script: commands
