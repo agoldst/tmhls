@@ -7,14 +7,14 @@ make_model_main <- function() {
         num.topics=150,
         alpha.sum=5,
         beta=0.01 ,
-        n.iters=200,
+        n.iters=1000,
         n.max.iters=10,
         n.hyper.iters=20,
         n.burn.in=50,
         threads=4L)
     # uncomment to use fast test settings
-    modeling_params$instances <- "/Users/agoldst/Documents/research/20c/hls/dfr-data/out/journals.mallet"
-    modeling_params$num.topics <- 10
+    # modeling_params$instances <- "/Users/agoldst/Documents/research/20c/hls/dfr-data/out/journals.mallet"
+    # modeling_params$num.topics <- 10
 
     doctopics_file <- "models/topics.csv"
     state_file <- "models/mallet_state.gz"
