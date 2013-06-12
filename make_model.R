@@ -2,6 +2,8 @@
 make_model_main <- function() {
     source("~/Developer/dfr-analysis/source_all.R")
 
+    output_dir <- "/spare2/ag978/130612/"
+
     modeling_params <- list(
         instances="/spare2/ag978/journals130611.mallet",
         num.topics=150,
@@ -12,18 +14,23 @@ make_model_main <- function() {
         n.hyper.iters=20,
         n.burn.in=50,
         threads=8L)
-    # uncomment to use fast test settings
-    # modeling_params$instances <- "/Users/agoldst/Documents/research/20c/hls/dfr-data/out/journals.mallet"
-    # modeling_params$num.topics <- 10
 
-    doctopics_file <- "models/topics.csv"
-    state_file <- "models/mallet_state.gz"
-    num.top.words <- 30
-    wk_file <- "models/keys.csv"
+    # uncomment to use fast test settings
+    # modeling_params$instances <- "/Users/agoldst/Documents/research/20c/hls/tmhls/models/test/journals.mallet"
+    # modeling_params$num.topics <- 10
+    # output_dir <- "/Users/agoldst/Documents/research/20c/hls/tmhls/models/test/"
+
+
+    doctopics_file <- file.path(output_dir,"topics.csv")
+    state_file <- file.path(output_dir,"mallet_state.gz")
+
+    # how many "top key words" for each topic?
+    num.top.words <- 50
+    wk_file <- file.path(output_dir,"keys.csv")
 
     # give a filename to save this one
     weights_file <- NULL
-    # weights_file <- "models/weights.tsv"
+    # weights_file <- file.path(output_dir,"weights.tsv")
 
     message("Beginning mallet train-topics run...")
 
