@@ -1,5 +1,28 @@
 # 2013-06-12 AG
 
+made a new instance at models/out130612/journals.mallet:
+
+A frequency threshold of 6.29785577493439e-06 or > 695 tokens
+leaves 9998 of 1001031 types (0.010) and 99219809 of 110355020 tokens (0.899)
+The 6047 unique stopwords from stoplist_final.txt
+correspond to 60637548 of 110355020 tokens (0.549) in the corpus
+21385013 rows remain.
+
+uploaded to /spare2/ag978/130612/journals.mallet.
+Started mallet run around 6:30 p.m.: 
+instances="/spare2/ag978/130612/journals.mallet",
+num.topics=150,
+alpha.sum=5,
+beta=0.01 ,
+n.iters=500,
+n.max.iters=10,
+n.hyper.iters=20,
+n.burn.in=50,
+threads=16L
+
+
+# 2013-06-12 AG
+
 result from yesterday's mallet run saved locally in out130611, archived as model130611.tar
 
 # 2013-06-11 AG
