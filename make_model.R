@@ -5,15 +5,15 @@ make_model_main <- function() {
     output_dir <- "/spare2/ag978/130612/"
 
     modeling_params <- list(
-        instances="/spare2/ag978/journals130611.mallet",
+        instances="/spare2/ag978/130612/journals.mallet",
         num.topics=150,
         alpha.sum=5,
         beta=0.01 ,
-        n.iters=1000,
+        n.iters=500,
         n.max.iters=10,
         n.hyper.iters=20,
         n.burn.in=50,
-        threads=8L)
+        threads=16L)
 
     testing <- F 
     # uncomment to use fast test settings
@@ -35,8 +35,8 @@ make_model_main <- function() {
     wk_file <- file.path(output_dir,"keys.csv")
 
     # give a filename to save this one
-    weights_file <- NULL
-    # weights_file <- file.path(output_dir,"weights.tsv")
+    # weights_file <- NULL
+    weights_file <- file.path(output_dir,"weights.tsv")
 
     message("Beginning mallet train-topics run...")
 
