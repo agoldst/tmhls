@@ -109,7 +109,7 @@ together	inGoldstone
 different	inGoldstone	
 own	inGoldstone	
 rather	inGoldstone	
-mr	inGoldstone	
+mr	inGoldstone	y
 course	inGoldstone	
 enough	inGoldstone	
 alone	inGoldstone	
@@ -241,7 +241,7 @@ thoroughly	inGoldstone
 elsewhere	inGoldstone	
 di	inGoldstone	y
 getting	inGoldstone	
-mrs	inGoldstone	
+mrs	inGoldstone	y
 unfortunately	inGoldstone	
 selves	inGoldstone	
 using	inGoldstone	
