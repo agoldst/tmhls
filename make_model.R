@@ -11,14 +11,14 @@ make_model_main <- function() {
         n.max.iters=10,
         n.hyper.iters=20,
         n.burn.in=50,
-        threads=4L)
+        threads=8L)
     # uncomment to use fast test settings
     # modeling_params$instances <- "/Users/agoldst/Documents/research/20c/hls/dfr-data/out/journals.mallet"
     # modeling_params$num.topics <- 10
 
     doctopics_file <- "models/topics.csv"
     state_file <- "models/mallet_state.gz"
-    num.top.words <- 20
+    num.top.words <- 30
     wk_file <- "models/keys.csv"
 
     # give a filename to save this one
@@ -56,8 +56,12 @@ make_model_main <- function() {
 
         write_topic_words(trainer,outfile=weights_file)
     }
+
+    trainer
 }
 
-# execution
+# execution: should allow the trainer object to persist
 
-make_model_main()
+trainer <- make_model_main()
+
+# TODO diagnostics
