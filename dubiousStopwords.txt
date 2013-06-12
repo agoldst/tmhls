@@ -519,14 +519,14 @@ hue	inUnderwood
 irish	inUnderwood	
 princess	inUnderwood	
 manual	inUnderwood	
-there's	inUnderwood	h
+there's	inUnderwood	y
 porter	inUnderwood	
 destiny	inUnderwood	
 lean	inUnderwood	
 sung	inUnderwood	
 ami	inUnderwood	 
 jesus	inUnderwood	
-ben	inUnderwood	
+ben	inUnderwood	y
 ai	inUnderwood	y
 rocky	inUnderwood	
 it's	inUnderwood	y
