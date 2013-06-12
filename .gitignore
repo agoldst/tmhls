@@ -1,3 +1,7 @@
 stoplist_final.txt
 
 models
+dfr-data
+
+.DS_Store
+
