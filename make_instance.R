@@ -29,15 +29,24 @@ get_counts <- function(dirs,
     read_dfr(files=files)
 }
  
-rare_token_report <- function(counts,freq_threshold,plotsfile="freqplots.png") {
-
-    message("Aggregating token counts into overall counts")
-
-    overall <- with(counts,table(rep(WORDCOUNTS,times=WEIGHT)))
+rare_token_report <- function(overall,
+                              freq_threshold=NULL,rank_threshold=NULL,
+                              plotsfile="freqplots.png") {
 
     total <- sum(overall)
     ovf <- as.data.frame(overall)
-    ovf$keep <- ovf$Freq / total > freq_threshold
+    if(!is.null(freq_threshold)) { 
+        count_threshold <- freq_threshold * total
+    }
+    else {
+        if(is.null(rank_threshold)) {
+            stop("No threshold supplied")
+        }
+
+        count_threshold <- sort(overall,decreasing=T)[rank_threshold]
+    }
+            
+    ovf$keep <- ovf$Freq >= count_threshold
     
     message("Constructing plots...")
 
@@ -60,21 +69,33 @@ rare_token_report <- function(counts,freq_threshold,plotsfile="freqplots.png") {
     
     message("Plots saved to ",plotsfile)
     
-    types_frac <- 1 - ecdf(overall)(freq_threshold * total)
+    types_frac <- 1 - ecdf(overall)(count_threshold)
     types_total <- length(overall)
     types_msg <- sprintf("%.0f of %.0f types (%.3f)",
                          types_frac * types_total,types_total,types_frac)
     
-    tokens_count <- sum(overall[overall >= freq_threshold * total])
+    tokens_count <- sum(overall[overall >= count_threshold])
     tokens_msg <- sprintf("%.0f of %.0f tokens (%.3f)",
                          tokens_count,total,tokens_count / total)
-    message("A frequency threshold of ",freq_threshold,
-            " or > ",floor(freq_threshold * total)," tokens\n",
+    message("A frequency threshold of ",count_threshold / total,
+            " or > ",floor(count_threshold)," tokens\n",
             "leaves ",types_msg," and ",tokens_msg)
     
     freqdist
 }
 
+stopword_report <- function(overall,stoplist_file) {
+    stopwords <- scan(stoplist_file,what=character(),sep="\n",quiet=T)
+    stopwords <- unique(stopwords)
+
+    total <- sum(overall)
+    stopcount <- sum(overall[stopwords],na.rm=T)
+
+    message("The ",length(stopwords)," unique stopwords from ",
+            stoplist_file,"\n",
+            "correspond to ",stopcount, " of ",total," tokens (",
+            sprintf("%.3f",stopcount / total),") in the corpus")
+}
 
 # main()
 
@@ -96,16 +117,19 @@ make_instance_main <- function() {
                   "res1925-1980",
                   "res1981-2012")
     # or for faster testing, uncomment:
-    # dfr_dirs <- "~/Developer/dfr-analysis/test_data/pmla_sample"
+    dfr_dirs <- "~/Developer/dfr-analysis/test_data/pmla_sample"
 
     aquo <- as.Date("1905-01-01")
     adquem <- as.Date("2004-12-31")
     itemtypes <- "fla\t"
     
+    # corpus-trimming parameters
     # this should be pretty moderate
-    freq_threshold=1e-7
+    freq_threshold <- 1e-7
+    #rank_threshold <- NULL
     # this would be more aggressive
-    # freq_threshold=1e-5
+    freq_threshold <- NULL
+    rank_threshold <- 10000
 
     outdir <- "out"
 
@@ -131,18 +155,23 @@ make_instance_main <- function() {
                          adquem,
                          itemtypes)
 
-    rare_token_report(counts,freq_threshold,plotfile)
+    message("Read ",nrow(counts)," rows") 
+    message("Aggregating token counts into overall counts")
 
-    message("Read ",nrow(counts)," rows\n",
-            "Removing word types with corpus frequency < ",freq_threshold)
+    overall <- overall_counts(counts) 
+    rare_token_report(overall,freq_threshold,rank_threshold,plotfile) 
+    stopword_report(overall,stoplist_file)
 
-    counts <- remove_rare(counts,freq_threshold)
+    message("Removing infrequent word types...")
 
-    message("Making MALLET instance...")
+    counts <- remove_rare(counts,freq_threshold,rank_threshold,
+                          .overall=overall)
 
+    message(nrow(counts)," rows remain.") 
+    message("Making MALLET instance...") 
     inst <- make_instances(docs_frame(counts),stoplist_file)
-    write_instances(inst,outfile)
 
+    write_instances(inst,outfile) 
     message("Instance saved to ",outfile)
 
     setwd(pwd)
