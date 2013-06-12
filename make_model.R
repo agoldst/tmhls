@@ -15,10 +15,16 @@ make_model_main <- function() {
         n.burn.in=50,
         threads=8L)
 
+    testing <- F 
     # uncomment to use fast test settings
-    # modeling_params$instances <- "/Users/agoldst/Documents/research/20c/hls/tmhls/models/test/journals.mallet"
-    # modeling_params$num.topics <- 10
-    # output_dir <- "/Users/agoldst/Documents/research/20c/hls/tmhls/models/test/"
+    # testing <- T
+    if(testing) {
+        modeling_params$instances <- "/Users/agoldst/Documents/research/20c/hls/tmhls/models/test/journals.mallet"
+        modeling_params$n.iters <- 200
+        modeling_params$num.topics <- 10
+        modeling_params$threads <- 2L
+        output_dir <- "/Users/agoldst/Documents/research/20c/hls/tmhls/models/test"
+    }
 
 
     doctopics_file <- file.path(output_dir,"topics.csv")

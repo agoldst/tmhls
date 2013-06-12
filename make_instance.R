@@ -105,7 +105,7 @@ make_instance_main <- function() {
     library(ggplot2)
     library(grid)
     pwd <- getwd()
-    setwd("~/Documents/research/20c/hls/dfr-data")
+    setwd("~/Documents/research/20c/hls/tmhls")
 
     # parameters
     dfr_dirs <- c("elh_ci_all",
@@ -131,18 +131,16 @@ make_instance_main <- function() {
     freq_threshold <- NULL
     rank_threshold <- 10000
 
-    outdir <- "out"
+    outdir <- "/Users/agoldst/Documents/research/20c/hls/tmhls/models/test"
+    
 
     plotfile <- file.path(outdir,"freqplots.png")
     outfile <- file.path(outdir,"journals.mallet")
 
-    message("regenerating stoplist_final.txt")
-
-    setwd("../external-repo/tmhls/")
+    message("regenerating stoplist_final.txt") 
     system("python stoplist_final.py",ignore.stdout=T,ignore.stderr=T)
-    setwd("~/Documents/research/20c/hls/dfr-data")
 
-    stoplist_file <- "../external-repo/tmhls/stoplist_final.txt"
+    stoplist_file <- "stoplist_final.txt"
 
     # main script: commands
 
