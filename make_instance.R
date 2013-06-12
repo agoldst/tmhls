@@ -108,7 +108,8 @@ make_instance_main <- function() {
     setwd("~/Documents/research/20c/hls/tmhls")
 
     # parameters
-    dfr_dirs <- c("elh_ci_all",
+    dfr_data_root <- "/Users/agoldst/Documents/research/20c/hls/tmhls/dfr-data"
+    journal_dirs <- c("elh_ci_all",
                   "mlr1905-1970",
                   "mlr1971-2013",
                   "modphil_all",
@@ -116,6 +117,8 @@ make_instance_main <- function() {
                   "pmla_all",
                   "res1925-1980",
                   "res1981-2012")
+    dfr_dirs <- file.path(dfr_data_root,journal_dirs)
+
     outdir <- "/Users/agoldst/Documents/research/20c/hls/tmhls/models/out130612/"
     # or for faster testing, uncomment:
     # dfr_dirs <- "~/Developer/dfr-analysis/test_data/pmla_sample"
