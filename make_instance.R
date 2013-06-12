@@ -116,8 +116,10 @@ make_instance_main <- function() {
                   "pmla_all",
                   "res1925-1980",
                   "res1981-2012")
+    outdir <- "/Users/agoldst/Documents/research/20c/hls/tmhls/models/out130612/"
     # or for faster testing, uncomment:
-    dfr_dirs <- "~/Developer/dfr-analysis/test_data/pmla_sample"
+    # dfr_dirs <- "~/Developer/dfr-analysis/test_data/pmla_sample"
+    # outdir <- "/Users/agoldst/Documents/research/20c/hls/tmhls/models/test"
 
     aquo <- as.Date("1905-01-01")
     adquem <- as.Date("2004-12-31")
@@ -125,13 +127,12 @@ make_instance_main <- function() {
     
     # corpus-trimming parameters
     # this should be pretty moderate
-    freq_threshold <- 1e-7
+    # freq_threshold <- 1e-7
     #rank_threshold <- NULL
     # this would be more aggressive
     freq_threshold <- NULL
     rank_threshold <- 10000
 
-    outdir <- "/Users/agoldst/Documents/research/20c/hls/tmhls/models/test"
     
 
     plotfile <- file.path(outdir,"freqplots.png")
