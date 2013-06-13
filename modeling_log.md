@@ -1,3 +1,7 @@
+# 2013-06-13 AG
+
+result from yesterday's mallet run saved locally in out130612, archived as model130612.tar
+
 # 2013-06-12 AG
 
 made a new instance at models/out130612/journals.mallet:
