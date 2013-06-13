@@ -26,25 +26,32 @@ make_model_main <- function() {
         output_dir <- "/Users/agoldst/Documents/research/20c/hls/tmhls/models/test"
     }
 
+    # output parameters
 
-    doctopics_file <- file.path(output_dir,"topics.csv")
+    # smoothing/normalization for document-topic and topic-word tables?
+    smoothed <- T
+    normalized <- T
+
+
+    doctopics_file <- file.path(output_dir,"doc_topics.csv")
     state_file <- file.path(output_dir,"mallet_state.gz")
 
     # how many "top key words" for each topic?
     num.top.words <- 50
     wk_file <- file.path(output_dir,"keys.csv")
 
-    # give a filename to save this one
-    # weights_file <- NULL
-    weights_file <- file.path(output_dir,"weights.tsv")
-
+    # two files for all topic-word assignments
+    topic_words_file <- file.path(output_dir,"topic_words.csv")
+    vocab_file <- file.path(output_dir,"vocab.txt")
+    
     message("Beginning mallet train-topics run...")
 
     trainer <- do.call(train_model,modeling_params)
 
     message("mallet run complete.")
     message("Saving document topics to ",doctopics_file)
-    doctopics <- topic_frame(trainer)
+    doctopics <- doc_topics_frame(trainer,
+                                  smoothed=smoothed,normalized=normalized)
     write.table(doctopics,
               doctopics_file,
               quote=F,sep=",",
@@ -62,14 +69,15 @@ make_model_main <- function() {
               row.names=F,
               col.names=T)
 
-    # This is not as useful, so by default we won't make this huge file
 
-    if(!is.null(weights_file)) {
-        message("Saving topic word weights to ",weights_file)
+    # this function does its own messaging
+    write_topic_words(trainer,
+                      topic_words_file=topic_words_file,
+                      vocab_file=vocab_file,
+                      smoothed=smoothed,
+                      normalized=normalized)
 
-        write_topic_words(trainer,outfile=weights_file)
-    }
-
+    # return the trainer object for further exploration
     trainer
 }
 
