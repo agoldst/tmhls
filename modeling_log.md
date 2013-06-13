@@ -1,6 +1,10 @@
 # 2013-06-13 AG
 
-result from yesterday's mallet run saved locally in out130612, archived as model130612.tar
+result from yesterday's mallet run saved locally in out130612. In
+Rstudio on apps, also saved the trainer's topic-word assignments
+(unsmoothed, unnormalized) and vocabulary. Copied all that remained of
+the console buffer in Rstudio into make_model.log_partial. All resulting
+files archived as model130612.tar
 
 # 2013-06-12 AG
 
