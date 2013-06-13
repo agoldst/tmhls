@@ -27,13 +27,17 @@ analyze_model_main <- function() {
 
     testing <- F
     # uncomment to run on small test set
-    testing <- T
+    # testing <- T
 
     if(testing) {
         model_dir <- "/Users/agoldst/Documents/research/20c/hls/tmhls/models/test/"
     }
 
     report_file <- file.path(model_dir,"topic_report.pdf")
+    boxplot_time <- "10 years"
+
+
+    # do the analysis
 
     message("Loading metadata")
 
@@ -49,7 +53,8 @@ analyze_model_main <- function() {
                                  meta_keep="pubdate")
 
     message("Generating report...")
-    topic_report(model$dtl,model$wkf,filename=report_file)
+    topic_report(model$dtl,model$wkf,time_breaks=boxplot_time,
+                 filename=report_file)
 
     message("Report saved as ",report_file)
 
