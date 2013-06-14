@@ -33,7 +33,11 @@ analyze_model_main <- function() {
         model_dir <- "/Users/agoldst/Documents/research/20c/hls/tmhls/models/test/"
     }
 
-    report_file <- file.path(model_dir,"topic_report.pdf")
+    report_dir <- file.path(model_dir,"report")
+    if(!file.exists(report_dir)) {
+        dir.create(report_dir)
+    }
+
     boxplot_time <- "10 years"
 
 
@@ -54,9 +58,9 @@ analyze_model_main <- function() {
 
     message("Generating report...")
     topic_report(model$dtl,model$wkf,time_breaks=boxplot_time,
-                 filename=report_file)
+                 filename_base=report_dir)
 
-    message("Report saved as ",report_file)
+    message("Reports saved to ",report_dir)
 
     # allow results to persist
     list(model=model,metadata=metadata)
