@@ -77,8 +77,8 @@ analyze_model_main <- function(model="test") {
 # choose which model (file paths specified in main() subroutine)
 
 results <- analyze_model_main(
-                              model="130612"
-                              # model="130611"
+                              #model="130612"
+                              model="130611"
                               # model="test"
                               )
 
