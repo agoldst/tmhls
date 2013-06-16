@@ -1,0 +1,101 @@
+```{r setup,include=F,cache=F}
+opts_chunk$set(echo=F,warning=F,prompt=F,comment="",
+    cache=F,autodep=T)
+options(width=70)
+dep_auto()
+library(ggplot2)
+# library(xtable)
+```
+
+```r
+source("~/Developer/dfr-analysis/source_all.R")
+
+dfr_data_root <- "/Users/agoldst/Documents/research/20c/hls/tmhls/dfr-data"
+journal_dirs <- c("elh_ci_all",
+              "mlr1905-1970",
+              "mlr1971-2013",
+              "modphil_all",
+              "nlh_all",
+              "pmla_all",
+              "res1925-1980",
+              "res1981-2012")
+dfr_dirs <- file.path(dfr_data_root,journal_dirs)
+```
+
+Read in metadata and do some recoding:
+```r
+metadata <- read_metadata(file.path(dfr_dirs,"citations.CSV"),strip.white=T)
+
+# N.B. ordering alphabetical by journaltitle ("The Review of English Studies")
+metadata$journal <- factor(metadata$journaltitle,
+                           labels=c("CI","ELH","ModPhil","NLH","PMLA", 
+                                    "MLR","RES"))
+
+metadata$date <- pubdate_Date(metadata$pubdate)
+metadata$date_cut <- cut(metadata$date,"5 years")
+```
+
+# What's in the journals?
+
+```r
+with(metadata,table(journal,type))
+```
+
+Including all item types:
+
+```r
+qplot(date,journal,data=metadata,geom="jitter",alpha=I(0.3),color=type)
+```
+
+Including just the full-length articles:
+
+```r
+qplot(date,journal,data=subset(metadata,type=="fla"),
+    geom="jitter",alpha=I(0.3))
+```
+
+# Who's in the journals?
+
+Multiple authors:
+
+```r
+authors <- unlist(strsplit("\t",metadata$author))
+auth_tab <- table(metadata$author)
+sort(auth_tab,decreasing=T)[1:30]
+```
+
+# About the corpus
+
+Isolate the corpus of interest and read in word counts:
+
+```r
+# ... dates?
+corp_meta <- subset(metadata,type=="fla")
+filenames <- file.path(dfr_dirs,"wordcounts",as.filename(corp_meta$id))
+counts <- read_dfr(corp_meta)
+```
+
+## How long are articles?
+
+We'll calculate the lengths; this is the overall distribution:
+
+```r
+lengths <- ddply(counts,"id",summarize,length=sum(WEIGHT))
+lengths <- merge(corp_meta,lengths,by="id")
+qplot(length,data=lengths,geom="bar")
+```
+
+We can also look at this broken up by journal:
+
+```r
+qplot(length,data=lengths,geom="bar",facets=journal~)
+```
+
+And finally over time:
+
+```r
+qplot(as.Date(date_cut),length,data=lengths,geom="bar",facets=journal~)
+```
+
+
+
