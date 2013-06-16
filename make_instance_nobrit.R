@@ -35,11 +35,26 @@ read_britticisms <- function(filepath) {
   trans_table
 }
 
-prune_filelist <- function(files, metadata, aquo, adquem, types="fla\t") {
+read_mlr_exclusions <- function(filepath) {
+  # code creates a dummy column for reasons that appear related to an
+  # 'infamous trailing comma' -- probably moot here, but you never know
+  
+  cols <- scan(f,nlines=1,what=character(),sep=",",quiet=T)
+  cols <- c(cols,"unused")
+  toskip <- subset(read.csv(f,skip=1,header=F,col.names=cols,quote="",as.is=T), select=-unused)
+  
+  # just return a vector of ids to skip
+  toskip$id
+}
+
+# I edited this function to permit exclusions of MLR reviews misclassified as "fla."
+
+prune_filelist <- function(files, metadata, aquo, adquem, types = "fla\t", toskip = NULL) {
   # apply cutoff dates
   keep_ids <- metadata$id[metadata$date >= as.Date(aquo) &
                             metadata$date <= as.Date(adquem) &
-                            metadata$type %in% types]
+                            metadata$type %in% types &
+                            !metadata$id %in% toskip]
   files[as.id(files) %in% keep_ids]
 }
 
@@ -55,11 +70,16 @@ get_counts <- function(dirs,
   
   message("Read ",nrow(metadata)," metadata entries")
   
+  # added this to get the errors in MLR 2011-12
+  ids_toskip <- read_mlr_exclusions('~/Journals/tmhls/MLR_mislabeled_fla.CSV')
+  message("Excluding ", length(ids_toskip), " mislabeled book reviews from MLR.")
+  
   globs <- file.path(dirs,"wordcounts","wordcounts*.CSV")
   files <- prune_filelist(files=Sys.glob(globs),
                           metadata=metadata,
                           aquo=aquo,adquem=adquem,
-                          types=itemtypes)
+                          types=itemtypes,
+                          toskip=ids_toskip)
   
   message("Importing ",length(files)," wordcount.CSV files")
   
@@ -150,7 +170,7 @@ make_instance_main <- function() {
   adquem <- as.Date("2013-12-31")
   itemtypes <- "fla\t"
   freq_threshold <- NULL
-  rank_threshold <- 20000
+  rank_threshold <- 30000
   
   plotfile <- file.path(outdir,"freqplots.png")
   outfile <- file.path(outdir,"journals.mallet")
