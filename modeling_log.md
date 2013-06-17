@@ -1,3 +1,32 @@
+# 2013-06-17 AG
+
+Ran instance_hls_k100_v100000.R. This created a new instance of the flas from the seven lit journals, with a 100K word vocabulary, British spellings translated to American, and documents under 1000 words discarded. This is the logging output:
+
+Plots saved to models/hls_k100_v100000/freqplots.png
+A frequency threshold of 1.48480394593994e-07 or > 19 tokens
+leaves 98748 of 1122454 types (0.088) and 125490482 of 127963022 tokens (0.981)
+The 6047 unique stopwords from ~/Documents/research/20c/hls/tmhls/stoplist_final.txt
+correspond to 70003350 of 127963022 tokens (0.547) in the corpus
+Removing infrequent word types...
+31385833 rows remain.
+Instance saved to models/hls_k100_v100000/journals.mallet
+
+I uploaded the resulting instance to apps.rutgers.edu:/spare2/ag978/hls_k100_v100000/journals.mallet. I then launched a 100-topic run using model_hls_k100_v100000.R, which contains these parameters:
+
+num.topics=100,
+n.iters=500,
+threads=16L, 
+beta=0.01,
+n.max.iters=10,
+n.hyper.iters=20,
+n.burn.in=50,
+smoothed=T,
+normalized=T
+
+
+
+
+
 # 2013-06-17 TU: HLSk300v120000
 
 The instance was produced by make_HLS_instance.R, which I have pushed to the repo
