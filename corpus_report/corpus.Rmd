@@ -1,0 +1,118 @@
+```{r setup,include=F,cache=F}
+opts_chunk$set(echo=T,warning=F,prompt=F,comment="",message=F,
+    cache=F,autodep=T,fig.path="plots/")
+options(width=70)
+dep_auto()
+```
+
+```{r initChunk} 
+library(xtable)
+source("~/Developer/dfr-analysis/source_all.R")
+dfr_data_root <- "/Users/agoldst/Documents/research/20c/hls/tmhls/dfr-data"
+journal_dirs <- c("elh_ci_all",
+              "mlr1905-1970",
+              "mlr1971-2013",
+              "modphil_all",
+              "nlh_all",
+              "pmla_all",
+              "res1925-1980",
+              "res1981-2012")
+dfr_dirs <- file.path(dfr_data_root,journal_dirs)
+```
+
+Read in metadata and do some recoding:
+```{r read-metadata}
+metadata <- read_metadata(file.path(dfr_dirs,"citations.CSV"),strip.white=T)
+
+# N.B. ordering alphabetical by journaltitle ("The Review of English Studies")
+metadata$journal <- factor(metadata$journaltitle,
+                           labels=c("CI","ELH","ModPhil","NLH","PMLA", 
+                                    "MLR","RES"))
+
+metadata$date <- pubdate_Date(metadata$pubdate)
+metadata$date_cut <- cut(metadata$date,"10 years")
+```
+
+# What's in the journals?
+
+```{r type-table,results="asis"}
+type_tab <- with(metadata,table(journal,type))
+print(xtable(type_tab),type="html")
+```
+
+Including all item types:
+
+```{r items-jitter}
+qplot(date,journal,data=metadata,geom="jitter",alpha=I(0.3),color=type)
+```
+
+Including just the full-length articles:
+
+```{r fla-jitter}
+qplot(date,journal,data=subset(metadata,type=="fla"),
+    geom="jitter",alpha=I(0.3))
+```
+
+# About the corpus
+
+Isolate the corpus of interest and read in word counts:
+
+```{r corpus-meta}
+# ... dates?
+corp_meta <- subset(metadata,type=="fla" & title != "Review")
+lengths <- read.csv("~/Documents/research/20c/hls/tmhls/document_lengths.csv",
+                    as.is=T)
+lengths$id <- as.id(lengths$filename)
+lengths$filename <- NULL
+lengths <- merge(corp_meta,lengths,by="id")
+```
+
+## Who's in the corpus?
+
+Repeat authors:
+
+```{r authors,results="asis"}
+authors <- unlist(strsplit(corp_meta$author,"\t",fixed=T))
+auth_tab <- sort(table(authors),decreasing=T)[1:30]
+
+print(xtable(as.data.frame(auth_tab)),type="html")
+```
+
+
+## How long are articles?
+
+```{r lengths-summary}
+summary(lengths$length)
+```
+
+```{r lengths-dist}
+lp <- ggplot(lengths,aes(length))
+# log scale?
+# lp <- lp + scale_x_log10()
+lp + geom_bar(binwidth=1000)
+```
+
+We can also look at this broken up by journal:
+
+```{r journals-summary}
+for(j in levels(corp_meta$journal)) {
+    print(j)
+    with(lengths,print(summary(length[journal==j])))
+}
+```
+
+```{r lengths-journals,fig.height=12}
+# this cuts off some outliers
+lp + geom_bar(binwidth=1000) + facet_wrap(~ journal,nrow=7) + xlim(0,50000)
+```
+
+And finally over time:
+
+```{r lengths-time,fig.height=20,fig.width=12}
+p <- ggplot(lengths)
+p <- p + geom_boxplot(aes(as.Date(date_cut),length,group=date_cut))
+p + facet_wrap(~ journal,nrow=7,scales="free_y")
+```
+
+
+

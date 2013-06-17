@@ -19,6 +19,9 @@ def main(script,*dirs):
     for d in dirs:
         files.extend(glob(os.path.join(d,"*.CSV")))
 
+    # header line
+    print "filename,length"
+
     for f in files:
         wordlen = 0
         with open(f) as countfile:
