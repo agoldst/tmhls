@@ -12,6 +12,5 @@ trainer <- make_model(instance=file.path(wd,"journals.mallet"),
                       n.max.iters=10,
                       n.hyper.iters=20,
                       n.burn.in=50,
-                      threads=16L,
                       smoothed=T,
                       normalized=T)
