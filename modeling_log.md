@@ -85,13 +85,14 @@ model itself. Settings were
 
 Output was not smoothed or normalized.
 
-# 2013-06-17: HLSk300v120000
+# 2013-06-17 TU: HLSk300v120000
 
 The instance was produced by make_HLS_instance.R, which I have pushed to the repo
 as "make_instance_nobrit.R," a more comprehensible title. Setting were
 
 * a 120,000 word vocabulary
-* stoplist_final.txt plus "ofthe"
+* stoplist_final.txt <blink>plus "ofthe"</blink>
+* Spelling normalization as per in UK2UStransrules.csv,
 * the full date range of all journals, and
 * only 'fla' files -- the 'brv' mislabeled as 'fla'
 * in MLR 2011-12 were removed.
