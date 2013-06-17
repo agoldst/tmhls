@@ -21,6 +21,11 @@ model_files <- function(model) {
         list(model_dir=model_dir,
              keys_file=file.path(model_dir,"keys.csv"),
              doctops_file=file.path(model_dir,"topics.csv"))
+    } else if(model=="ahr_k100_v20000") {
+        model_dir <- "~/Documents/research/20c/hls/tmhls/models/ahr_k100_v20000/"
+        list(model_dir=model_dir,
+             journal_dirs="AHR",
+             model_smoothed=F)
     }
     else {
         stop("Specify a model to analyze.")
@@ -61,7 +66,9 @@ analyze_model <- function(
                        "res1925-1980",
                        "res1981-2012"),
         dfr_dirs=file.path(dfr_data_root,journal_dirs),
-        boxplot_time="10 years") {
+        boxplot_time="10 years",
+        model_smoothed=T,
+        log_scale=model_smoothed) {
 
     source(dfr_analysis_source)
 
@@ -89,7 +96,9 @@ analyze_model <- function(
                                  meta_keep="pubdate")
 
     message("Generating report...")
-    topic_report(model$dtl,model$wkf,time_breaks=boxplot_time,
+    topic_report(model$dtl,model$wkf,
+                 time_breaks=boxplot_time,
+                 log_scale=log_scale,
                  filename_base=report_dir)
 
     message("Reports saved to ",report_dir)
