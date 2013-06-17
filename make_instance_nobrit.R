@@ -39,9 +39,9 @@ read_mlr_exclusions <- function(filepath) {
   # code creates a dummy column for reasons that appear related to an
   # 'infamous trailing comma' -- probably moot here, but you never know
   
-  cols <- scan(f,nlines=1,what=character(),sep=",",quiet=T)
+  cols <- scan(filepath,nlines=1,what=character(),sep=",",quiet=T)
   cols <- c(cols,"unused")
-  toskip <- subset(read.csv(f,skip=1,header=F,col.names=cols,quote="",as.is=T), select=-unused)
+  toskip <- subset(read.csv(filepath,skip=1,header=F,col.names=cols,quote="",as.is=T), select=-unused)
   
   # just return a vector of ids to skip
   toskip$id
@@ -170,7 +170,7 @@ make_instance_main <- function() {
   adquem <- as.Date("2013-12-31")
   itemtypes <- "fla\t"
   freq_threshold <- NULL
-  rank_threshold <- 30000
+  rank_threshold <- 120000
   
   plotfile <- file.path(outdir,"freqplots.png")
   outfile <- file.path(outdir,"journals.mallet")
