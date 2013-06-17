@@ -1,3 +1,53 @@
+# 2013-06-17 TU: HLSk300v120000
+
+The instance was produced by make_HLS_instance.R, which I have pushed to the repo
+as "make_instance_nobrit.R," a more comprehensible title. Setting were
+
+* a 120,000 word vocabulary
+* stoplist_final.txt <blink>plus "ofthe"</blink>
+* Spelling normalization as per in UK2UStransrules.csv,
+* the full date range of all journals, and
+* only 'fla' files -- the 'brv' mislabeled as 'fla'
+* in MLR 2011-12 were removed.
+
+The instance was modeled by run_HLS_instance.R. Settings were
+
+* instances="/Users/tunderwood/Journals/Uresults/HLS/journals.mallet",
+* num.topics=300,
+* alpha.sum=5,
+* beta=0.01 ,
+* n.iters=800,
+* n.max.iters=10,
+* n.hyper.iters=20,
+* n.burn.in=50,
+* threads=4L
+
+Output was not smoothed or normalized.
+
+# 2013-06-16 TU: AHRk100v20000
+
+The instance was produced with
+
+* a 20,000 word vocabulary
+* standard stoplist_final (6047 unique stopwords)
+* Spelling normalization as per in UK2UStransrules.csv
+* the full date range, and
+* both 'fla' and 'brv' files
+
+I used make_AHR_instance.R for that, and used run_AHR_instance.R to run the
+model itself. Settings were
+
+* 100 topics
+* alpha.sum=5,
+* beta=0.01 ,
+* n.iters=500,
+* n.max.iters=10,
+* n.hyper.iters=20,
+* n.burn.in=50,
+* threads=4L
+
+Output was not smoothed or normalized.
+
 # 2013-06-13 AG
 
 result from yesterday's mallet run saved locally in out130612. In
@@ -61,52 +111,3 @@ n.hyper.iters=20,
 n.burn.in=50,
 threads=4L
 
-# 2013-06-16 TU: AHRk100v20000
-
-The instance was produced with
-
-* a 20,000 word vocabulary
-* standard stoplist_final (6047 unique stopwords)
-* Spelling normalization as per in UK2UStransrules.csv
-* the full date range, and
-* both 'fla' and 'brv' files
-
-I used make_AHR_instance.R for that, and used run_AHR_instance.R to run the
-model itself. Settings were
-
-* 100 topics
-* alpha.sum=5,
-* beta=0.01 ,
-* n.iters=500,
-* n.max.iters=10,
-* n.hyper.iters=20,
-* n.burn.in=50,
-* threads=4L
-
-Output was not smoothed or normalized.
-
-# 2013-06-17 TU: HLSk300v120000
-
-The instance was produced by make_HLS_instance.R, which I have pushed to the repo
-as "make_instance_nobrit.R," a more comprehensible title. Setting were
-
-* a 120,000 word vocabulary
-* stoplist_final.txt <blink>plus "ofthe"</blink>
-* Spelling normalization as per in UK2UStransrules.csv,
-* the full date range of all journals, and
-* only 'fla' files -- the 'brv' mislabeled as 'fla'
-* in MLR 2011-12 were removed.
-
-The instance was modeled by run_HLS_instance.R. Settings were
-
-* instances="/Users/tunderwood/Journals/Uresults/HLS/journals.mallet",
-* num.topics=300,
-* alpha.sum=5,
-* beta=0.01 ,
-* n.iters=800,
-* n.max.iters=10,
-* n.hyper.iters=20,
-* n.burn.in=50,
-* threads=4L
-
-Output was not smoothed or normalized.
