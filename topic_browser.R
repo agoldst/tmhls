@@ -108,24 +108,27 @@ message("Measuring the aggregate sizes of topics and documents.")
 # Create topic sizes.
 TopicSize <- integer(TopicCount)
 TopicsByJournal <- array(data = 0, dim = c(TopicCount, JournalCount))
+JournalSums <- numeric(JournalCount)
+
 for (i in 1: TopicCount) {
   TopicSize[i] <- sum(Theta[i, ])
   j = 0
   for (name in journalnames) {
     j = j + 1
     TopicsByJournal[i, j] = TopicsByJournal[i, j] + sum(Theta[i, journals == name])
+    JournalSums[j] = JournalSums[j] + sum(Theta[i, journals == name])
   }
   # normalize
   TopicsByJournal[i, ] = TopicsByJournal[i, ] / TopicSize[i]
 }
 
+JournalSums = JournalSums / sum(JournalSums)
 
 # Create document sizes.
 DocSize <- integer(doccount)
 for (i in 1: doccount) {
   DocSize[i] <- sum(Theta[ , i])
 }
-
 # Rank topics
 TopicBulk <- TopicSize
 TopicRanks <- integer(TopicCount)
@@ -254,7 +257,15 @@ repeat {
 	}
 	cat('\n')
   for (j in 1: JournalCount) {
-    cat(journalnames[j], ": ", TopicsByJournal[TopNum, j], '\n')
+    thisproportion = TopicsByJournal[TopNum, j]
+    overallproportion = JournalSums[j]
+    difference = thisproportion - overallproportion
+    if (difference > 0) {
+      cat(journalnames[j], ": \t", round(thisproportion * 100, 2), '% which is ', round(difference * 100, 2), '% greater than its share of the corpus.', '\n', sep="")
+    }
+    if (difference < 0) {
+      cat(journalnames[j], ": \t", round(thisproportion * 100, 2), '% which is ', round(-difference * 100, 2), '% less than its share of the corpus.', '\n', sep = "")
+    }
   }
   cat('\n')
 	}
