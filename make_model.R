@@ -18,6 +18,7 @@ make_model <- function(
         wk_file=file.path(output_dir,"keys.csv"),
         topic_words_file=file.path(output_dir,"topic_words.csv"),
         vocab_file=file.path(output_dir,"vocab.txt"),
+        diagnostics_file=file.path(output_dir,"diagnostics.xml"),
         dfr_analysis_root="~/Developer/dfr-analysis",
         dfr_analysis_source=file.path(dfr_analysis_root,"source_all.R")) {
 
@@ -68,6 +69,13 @@ make_model <- function(
                       smoothed=smoothed,
                       normalized=normalized)
 
+    # TODO more refined handling of diagnostics
+    message("Saving MALLET diagnostics to ",diagnostics_file)
+
+    diagnostics <- get_diagnostics(trainer,as.integer(num.top.words))
+    write_diagnostics(trainer,output_file=diagnostics_file,
+                      diagnostics=diagnostics)
+
     # return the trainer object for further exploration
     trainer
 }
@@ -75,4 +83,3 @@ make_model <- function(
 # execution: should allow the trainer object to persist
 # as in: trainer <- make_model()
 
-# TODO diagnostics
