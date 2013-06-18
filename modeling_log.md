@@ -55,27 +55,7 @@ Output was not smoothed or normalized.
 
 # 2013-06-16 TU: AHRk100v20000
 
-The instance was produced with
-
-* a 20,000 word vocabulary
-* standard stoplist_final (6047 unique stopwords)
-* Spelling normalization as per in UK2UStransrules.csv
-* the full date range, and
-* both 'fla' and 'brv' files
-
-I used make_AHR_instance.R for that, and used run_AHR_instance.R to run the
-model itself. Settings were
-
-* 100 topics
-* alpha.sum=5,
-* beta=0.01 ,
-* n.iters=500,
-* n.max.iters=10,
-* n.hyper.iters=20,
-* n.burn.in=50,
-* threads=4L
-
-Output was not smoothed or normalized.
+Was no good. Incomplete corpus.
 
 # 2013-06-13 AG
 
@@ -140,3 +120,36 @@ n.hyper.iters=20,
 n.burn.in=50,
 threads=4L
 
+# 2013-06-18 TU: AHRk150v105
+
+The instance was produced with
+
+* a 100,000 word vocabulary
+* stoplist_final plus 'ofthe' (6048 unique stopwords)
+* Spelling normalization as per in UK2UStransrules.csv
+* the full date range, and
+* only 'fla' files, of which there are 3,180
+
+I used make_AHR_instance.R for that, and used run_AHR_instance.R to run the
+model itself. Settings were
+
+150 topics; alpha.sum=10; beta=0.01; n.iters=500; n.max.iters=10; n.hyper.iters=20; n.burn.in=50; threads=4L
+
+Output was not smoothed or normalized. I increased alpha-sum to 10 experimentally, but don't see much difference. Also have an 100-topic model of AHR locally; it lacks a "fact-evidence" topic.
+
+# 2013-06-18 TU: HLSk200v105
+
+The instance was produced with
+
+* a 100,000 word vocabulary
+* stoplist_final plus 'ofthe' (6048 unique stopwords)
+* Spelling normalization as per in UK2UStransrules.csv
+* the full date range, and
+* only 'fla' files, of which there are 22-odd-thousand
+
+I used make_HLS_instance.R for that, and used run_HLS_instance.R to run the
+model itself. Settings were
+
+200 topics; alpha.sum=10; beta=0.01; n.iters=500; n.max.iters=10; n.hyper.iters=20; n.burn.in=50; threads=4L
+
+Output was not smoothed or normalized. I increased alpha-sum to 10 experimentally, but don't see much difference.
