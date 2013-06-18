@@ -19,7 +19,7 @@ make_model <- function(
         topic_words_file=file.path(output_dir,"topic_words.csv"),
         vocab_file=file.path(output_dir,"vocab.txt"),
         dfr_analysis_root="~/Developer/dfr-analysis",
-        dfr_analysis_source="~/Developer/dfr-analysis/source_all.R") {
+        dfr_analysis_source=file.path(dfr_analysis_root,"source_all.R")) {
 
     make_model_wd <- getwd()
     setwd(dfr_analysis_root)

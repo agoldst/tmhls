@@ -160,8 +160,8 @@ stopword_report <- function(overall,stoplist_file) {
 
 make_instance <- function(
         outdir,
-        dfr_analysis_source="~/Developer/dfr-analysis/source_all.R",
         dfr_analysis_root="~/Developer/dfr-analysis",
+        dfr_analysis_source=file.path(dfr_analysis_root,"source_all.R"),
         tmhls_root="~/Documents/research/20c/hls/tmhls",
         dfr_data_root=file.path(tmhls_root,"dfr-data"),
         journal_dirs=c("elh_ci_all",
