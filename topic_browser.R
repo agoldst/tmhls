@@ -1,8 +1,14 @@
 # Topic browser based on mallet output format.
 
+userinput <- readline('Are you modeling a) AHR or b) the collection of literary journals? ')
+if (userinput == 'a') {
+  meta_path = '~/Journals/tmhls/AHR_metadata.tsv'
+} else {
+  meta_path <- '~/Journals/tmhls/merged_metadata.tsv'
+}
+
 message("Loading metadata ... ")
-metadata_location <- '~/Journals/tmhls/merged_metadata.tsv'
-Metadata <- read.table(metadata_location, header = TRUE, stringsAsFactors=FALSE, sep = '\t', fill = TRUE, nrows = 100000, quote = '')
+Metadata <- read.table(meta_path, header = TRUE, stringsAsFactors=FALSE, sep = '\t', fill = TRUE, nrows = 100000, quote = '')
 
 # We're going to process metadata after getting a list of the documents actually in this model.
 
@@ -45,9 +51,17 @@ if (length(DocIndices) > matched) {
 DocDates <- as.numeric(Metadata$date)
 authors <- Metadata$author
 titles <- Metadata$title
+journals <- as.factor(Metadata$journaltitle)
 names(authors) <- Documents
 names(titles) <- Documents
 names(DocDates) <- Documents
+names(journals) <- Documents
+
+journalnames <- levels(journals)
+if (journalnames[1] == "") {
+  journalnames = journalnames[2:length(journalnames)]
+}
+JournalCount <- length(journalnames)
 
 remove(Metadata)
 
@@ -55,6 +69,7 @@ remove(Metadata)
 DocDates <- DocDates[DocIndices]
 authors <- authors[DocIndices]
 titles <- titles[DocIndices]
+journals <- journals[DocIndices]
 
 doccount <- length(DocIndices)
 Documents <- DocIndices
@@ -92,9 +107,18 @@ if (file.exists(correlation_path)) {
 message("Measuring the aggregate sizes of topics and documents.")
 # Create topic sizes.
 TopicSize <- integer(TopicCount)
+TopicsByJournal <- array(data = 0, dim = c(TopicCount, JournalCount))
 for (i in 1: TopicCount) {
   TopicSize[i] <- sum(Theta[i, ])
+  j = 0
+  for (name in journalnames) {
+    j = j + 1
+    TopicsByJournal[i, j] = TopicsByJournal[i, j] + sum(Theta[i, journals == name])
+  }
+  # normalize
+  TopicsByJournal[i, ] = TopicsByJournal[i, ] / TopicSize[i]
 }
+
 
 # Create document sizes.
 DocSize <- integer(doccount)
@@ -223,12 +247,16 @@ repeat {
   cat('\n')
 	docsalience <- Theta[TopNum, ]/DocSize
 	mostsalient <- order(docsalience, decreasing = TRUE)
-	TopTwenty <- mostsalient[1:20]
-	for (ordinal in TopTwenty) {
+	TopTen <- mostsalient[1:10]
+	for (ordinal in TopTen) {
 		cat(paste(authors[ordinal], titles[ordinal], as.character(DocDates[ordinal]), sep = ", "))
 		cat('\n')
-		}
+	}
 	cat('\n')
+  for (j in 1: JournalCount) {
+    cat(journalnames[j], ": ", TopicsByJournal[TopNum, j], '\n')
+  }
+  cat('\n')
 	}
 		
 	
