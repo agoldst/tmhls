@@ -1,3 +1,19 @@
+# 2013-06-18 AG
+
+Lost the results of the modeling run started yesterday on apps. Fixed what I think is the bug, namely that model_hls_k100_v100000.R designated some of its parameters in terms of a "wd" variable which it set but which was then overwritten by dfr-analysis/source_all.R before those parameters are evaluated. Why this didn't result in file not found errors I don't know. Anyway, committed the revised versions, and relaunched the modeling run:
+
+instances="/spare2/ag978/hls_k100_v100000/journals.mallet",
+output_dir="/spare2/ag978/hls_k100_v100000",
+num.topics=100,
+n.iters=500,
+threads=16L, 
+beta=0.01,
+n.max.iters=10,
+n.hyper.iters=20,
+n.burn.in=50,
+smoothed=T,
+normalized=T
+
 # 2013-06-17 AG
 
 Ran instance_hls_k100_v100000.R. This created a new instance of the flas from the seven lit journals, with a 100K word vocabulary, British spellings translated to American, and documents under 1000 words discarded. This is the logging output:
