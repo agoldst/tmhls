@@ -18,9 +18,13 @@ make_model <- function(
         wk_file=file.path(output_dir,"keys.csv"),
         topic_words_file=file.path(output_dir,"topic_words.csv"),
         vocab_file=file.path(output_dir,"vocab.txt"),
+        dfr_analysis_root="~/Developer/dfr-analysis",
         dfr_analysis_source="~/Developer/dfr-analysis/source_all.R") {
 
+    make_model_wd <- getwd()
+    setwd(dfr_analysis_root)
     source(dfr_analysis_source)
+    setwd(make_model_wd)
 
     message("Beginning mallet train-topics run...")
 

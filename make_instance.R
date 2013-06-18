@@ -161,6 +161,7 @@ stopword_report <- function(overall,stoplist_file) {
 make_instance <- function(
         outdir,
         dfr_analysis_source="~/Developer/dfr-analysis/source_all.R",
+        dfr_analysis_root="~/Developer/dfr-analysis",
         tmhls_root="~/Documents/research/20c/hls/tmhls",
         dfr_data_root=file.path(tmhls_root,"dfr-data"),
         journal_dirs=c("elh_ci_all",
@@ -184,9 +185,14 @@ make_instance <- function(
         outfile=file.path(outdir,"journals.mallet")) {
 
     # "includes"
-    source(dfr_analysis_source)
+    pwd <- getwd()
     library(ggplot2)
     library(grid)
+
+    setwd(dfr_analysis_root)
+    source(dfr_analysis_source)
+    setwd(pwd)
+
 
     # main script: commands
 

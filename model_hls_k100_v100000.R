@@ -1,10 +1,8 @@
 
 source("~/tmhls/make_model.R")
 
-wd <- "/spare2/ag978/hls_k100_v100000"
-
-trainer <- make_model(instance=file.path(wd,"journals.mallet"),
-                      output_dir=wd,
+trainer <- make_model(instances="/spare2/ag978/hls_k100_v100000/journals.mallet",
+                      output_dir="/spare2/ag978/hls_k100_v100000",
                       num.topics=100,
                       n.iters=500,
                       threads=16L, 
