@@ -55,7 +55,8 @@ analyze_model <- function(
         doctops_file=file.path(model_dir,"doc_topics.csv"),
         keys_file=file.path(model_dir,"keys.csv"),
         report_dir=file.path(model_dir,"report"),
-        dfr_analysis_source="~/Developer/dfr-analysis/source_all.R",
+        dfr_analysis_root="~/Developer/dfr-analysis",
+        dfr_analysis_source=file.path(dfr_analysis_root,"source_all.R"),
         dfr_data_root="~/Documents/research/20c/hls/tmhls/dfr-data" ,
         journal_dirs=c("elh_ci_all",
                        "mlr1905-1970",
@@ -70,7 +71,10 @@ analyze_model <- function(
         model_smoothed=T,
         log_scale=model_smoothed) {
 
+    analyze_model_wd <- getwd()
+    setwd(dfr_analysis_root)
     source(dfr_analysis_source)
+    setwd(analyze_model_wd)
 
     # parameters
 
