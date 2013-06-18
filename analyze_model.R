@@ -26,6 +26,11 @@ model_files <- function(model) {
         list(model_dir=model_dir,
              journal_dirs="AHR",
              model_smoothed=F)
+    } else if(model=="hls_k100_v100000") {
+        model_dir <- "~/Documents/research/20c/hls/tmhls/models/hls_k100_v100000/"
+
+        list(model_dir=model_dir,
+             doctops_file=gzfile(file.path(model_dir,"doc_topics.csv.gz")))
     }
     else {
         stop("Specify a model to analyze.")
