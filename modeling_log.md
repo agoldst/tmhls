@@ -153,3 +153,12 @@ model itself. Settings were
 200 topics; alpha.sum=10; beta=0.01; n.iters=500; n.max.iters=10; n.hyper.iters=20; n.burn.in=50; threads=4L
 
 Output was not smoothed or normalized. I increased alpha-sum to 10 experimentally, but don't see much difference.
+
+# 2013-06-18 TU: AHRallk150v105
+
+This instance included 'brv' files. Had a 10^5 vocabulary.
+
+Importing 57815 wordcount.CSV files.
+A frequency threshold of 9.57487399864771e-08 or > 6 tokensleaves 92253 of 462773 types (0.199) and 62096199 of 62664010 tokens (0.991)The 6048 unique stopwords from /Users/tunderwood/Journals/tmhls/stoplist_final.txtcorrespond to 32067548 of 62664010 tokens (0.512) in the corpus
+
+num.topics=150, alpha.sum=10, beta=0.01, n.iters=450, n.max.iters=10, n.hyper.iters=20, n.burn.in=50, threads=4L
