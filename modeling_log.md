@@ -14,6 +14,10 @@ n.burn.in=50,
 smoothed=T,
 normalized=T
 
+Completed around 3:30 p.m. In the interim I added a wrapper to MALLET's model diagnostics, so after the run ended I pulled this change to dfr-analysis on apps, re-sourced "topics_rmallet.R," and ran write_diagnostics() as well to produce diagnostics.xml. (This tail of the interactive RStudio session on apps is in the model folder as make_model.log_partial).
+
+Results downloaded to my machine at tmhls/models/hls_k100_v100000/. 
+
 # 2013-06-17 AG
 
 Ran instance_hls_k100_v100000.R. This created a new instance of the flas from the seven lit journals, with a 100K word vocabulary, British spellings translated to American, and documents under 1000 words discarded. This is the logging output:
