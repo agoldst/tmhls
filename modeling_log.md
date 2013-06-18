@@ -1,5 +1,22 @@
 # 2013-06-18 AG
 
+Created a new instance: just to throw out "ofthe"!  make_instance.R messaging:
+
+Read 33413778 rows
+'Normalizing' British spellings to American...
+Plots saved to models/hls_k48_v100K/freqplots.png
+A frequency threshold of 1.48480394593994e-07 or > 19 tokens
+leaves 98748 of 1122454 types (0.088) and 125490482 of 127963022 tokens (0.981)
+The 6048 unique stopwords from ~/Documents/research/20c/hls/tmhls/stoplist_final.txt
+correspond to 70006737 of 127963022 tokens (0.547) in the corpus
+Removing infrequent word types...
+31385833 rows remain.
+Instance saved to models/hls_k48_v100K/journals.mallet
+
+uploaded to apps.
+
+# 2013-06-18 AG
+
 Lost the results of the modeling run started yesterday on apps. Fixed what I think is the bug, namely that model_hls_k100_v100000.R designated some of its parameters in terms of a "wd" variable which it set but which was then overwritten by dfr-analysis/source_all.R before those parameters are evaluated. Why this didn't result in file not found errors I don't know. Anyway, committed the revised versions, and relaunched the modeling run:
 
 instances="/spare2/ag978/hls_k100_v100000/journals.mallet",
