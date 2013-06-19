@@ -1,3 +1,15 @@
+# 2013-06-19 AG
+
+Started tmhls/model_hls_k150_v100K.R on apps. This is using the same instance as was created for hls_k48_v100K. 
+
+# 2013-06-19 AG
+
+Didn't log this yesterday, but yesterday:
+Ran tmhls/hls_k48_v100K. Results downloaded from apps and saved to models/hls_k48_v100K.
+
+today:
+Realized that if I just managed to save the final estimate of beta I would be in a position to unsmooth and unnormalize the proportions, so I did this interactively in RStudio on apps before ending the session. Copied the console from the session to tmhls/hls_k48_v100K/make_model.log. 
+
 # 2013-06-18 AG
 
 Created a new instance: just to throw out "ofthe"!  make_instance.R messaging:
@@ -14,6 +26,7 @@ Removing infrequent word types...
 Instance saved to models/hls_k48_v100K/journals.mallet
 
 uploaded to apps.
+
 
 # 2013-06-18 AG
 
