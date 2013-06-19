@@ -1,6 +1,8 @@
 # 2013-06-19 AG
 
-Started tmhls/model_hls_k150_v100K.R on apps. This is using the same instance as was created for hls_k48_v100K. 
+Started tmhls/model_hls_k150_v100K.R on apps. This is using the same instance as was created for hls_k48_v100K.
+
+After two runs errored out with heap-full errors, increased heap size to 4g and ran again. Downloaded results to models/hls_k150_v100K/ . Noticed that I had forgotten to change weighted_keys_frame() to allow unsmoothed/unnormalized numbers like the other frames, so pushed up new dfr-analysis code for that to apps, and in the interactive session wrote out wkf_nosmooth.csv using this new function. A quick check with cut and diff shows that the first three columns of this csv are identical to those of keys.csv.
 
 # 2013-06-19 AG
 
