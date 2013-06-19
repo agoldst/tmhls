@@ -19,6 +19,7 @@ make_model <- function(
         topic_words_file=file.path(output_dir,"topic_words.csv"),
         vocab_file=file.path(output_dir,"vocab.txt"),
         diagnostics_file=file.path(output_dir,"diagnostics.xml"),
+        params_file=file.path(output_dir,"params.csv"),
         dfr_analysis_root="~/Developer/dfr-analysis",
         dfr_analysis_source=file.path(dfr_analysis_root,"source_all.R")) {
 
@@ -70,11 +71,15 @@ make_model <- function(
                       normalized=normalized)
 
     # TODO more refined handling of diagnostics
-    message("Saving MALLET diagnostics to ",diagnostics_file)
+    message("Saving mallet diagnostics to ",diagnostics_file)
 
     diagnostics <- get_diagnostics(trainer,as.integer(num.top.words))
     write_diagnostics(trainer,output_file=diagnostics_file,
                       diagnostics=diagnostics)
+
+    message("Recording misc. model parameters to ",params_file)
+    params <- model_params(trainer)
+    write.table(params,params_file,quote=F,sep=",",row.names=F,col.names=T)
 
     # return the trainer object for further exploration
     trainer
