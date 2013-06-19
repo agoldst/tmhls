@@ -15,4 +15,5 @@ trainer <- make_model(instances="/spare2/ag978/hls_k48_v100K/journals.mallet",
                       n.hyper.iters=20,
                       n.burn.in=50,
                       smoothed=F,
-                      normalized=F)
+                      normalized=F,
+                      java_heap="4g")

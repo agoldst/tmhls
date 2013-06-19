@@ -21,11 +21,13 @@ make_model <- function(
         diagnostics_file=file.path(output_dir,"diagnostics.xml"),
         params_file=file.path(output_dir,"params.csv"),
         dfr_analysis_root="~/Developer/dfr-analysis",
-        dfr_analysis_source=file.path(dfr_analysis_root,"source_all.R")) {
+        dfr_analysis_source=file.path(dfr_analysis_root,"source_all.R"),
+        java_heap="2g") {
 
     make_model_wd <- getwd()
     setwd(dfr_analysis_root)
     source(dfr_analysis_source)
+    topics_rmallet_setup(java_heap)
     setwd(make_model_wd)
 
     message("Beginning mallet train-topics run...")

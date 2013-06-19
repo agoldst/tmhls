@@ -182,7 +182,8 @@ make_instance <- function(
         freq_threshold=NULL,
         rank_threshold=100000, 
         plotfile=file.path(outdir,"freqplots.png"),
-        outfile=file.path(outdir,"journals.mallet")) {
+        outfile=file.path(outdir,"journals.mallet"),
+        java_heap="2g") {
 
     # "includes"
     pwd <- getwd()
@@ -191,6 +192,7 @@ make_instance <- function(
 
     setwd(dfr_analysis_root)
     source(dfr_analysis_source)
+    topics_rmallet_setup(java_heap)
     setwd(pwd)
 
 
