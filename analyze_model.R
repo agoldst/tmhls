@@ -20,7 +20,7 @@ model_files <- function(model) {
         model_dir <- "/Users/agoldst/Documents/research/20c/hls/tmhls/models/test/"
         list(model_dir=model_dir,
              keys_file=file.path(model_dir,"keys.csv"),
-             doctops_file=file.path(model_dir,"topics.csv"))
+             doctops_file=file.path(model_dir,"doc_topics.csv"))
     } else if(model=="ahr_k100_v20000") {
         model_dir <- "~/Documents/research/20c/hls/tmhls/models/ahr_k100_v20000/"
         list(model_dir=model_dir,

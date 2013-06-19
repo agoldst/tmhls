@@ -6,9 +6,11 @@ make_model <- function(
         alpha.sum=5,
         beta=0.01 ,
         n.iters=500,
-        n.max.iters=10,
-        n.hyper.iters=20,
-        n.burn.in=50,
+        n.max.iters=10,     # "iterated conditional modes" 
+        optimize_hyperparameters=T,     # if F, overrides next 3
+        n.hyper.iters=20,   # how often to do hyperparameter optimization
+        n.burn.in=50,       # how many iterations before hyperparam. opt. starts
+        symmetric_alpha=F,  # all alpha_k equal (but still optimize value)
         threads=16L,
         smoothed=F,         # applies to doc-topic and topic-word
         normalized=F,       # ditto
@@ -39,9 +41,11 @@ make_model <- function(
             beta=beta,
             n.iters=n.iters,
             n.max.iters=n.max.iters,
+            optimize_hyperparameters=optimize_hyperparameters,
             n.hyper.iters=n.hyper.iters,
             n.burn.in=n.burn.in,
-            threads=threads)
+            threads=threads,
+            symmetric_alpha=symmetric_alpha)
 
     message("mallet run complete.")
     message("Saving document topics to ",doctopics_file)
