@@ -34,7 +34,10 @@ model_files <- function(model) {
     } else if(model=="hls_k200_v105") {
         list(model_dir="~/Documents/research/20c/hls/tmhls/models/HLSk200v105/",
              model_smoothed=F)
-    }
+    } else if(model=="hls_k48_v100K") {
+        list(model_dir="~/Documents/research/20c/hls/tmhls/models/hls_k48_v100K/",
+             model_smoothed=T)
+    } 
     else {
         stop("Specify a model to analyze.")
     }
@@ -82,6 +85,7 @@ analyze_model <- function(
     analyze_model_wd <- getwd()
     setwd(dfr_analysis_root)
     source(dfr_analysis_source)
+    topics_rmallet_setup()
     setwd(analyze_model_wd)
 
     # parameters
