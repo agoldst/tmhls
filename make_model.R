@@ -61,7 +61,9 @@ make_model <- function(
     write_mallet_state(trainer,outfile=state_file)
 
     message("Saving weighted keys to ",wk_file)
-    wkf <- weighted_keys_frame(trainer,num.top.words=num.top.words)
+    wkf <- weighted_keys_frame(trainer,num.top.words=num.top.words,
+                               smoothed=smoothed,
+                               normalized=normalized)
     write.table(wkf,
               wk_file,
               quote=F,sep=",",
