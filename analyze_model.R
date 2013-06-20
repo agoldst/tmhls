@@ -20,12 +20,17 @@ model_files <- function(model) {
         model_dir <- "/Users/agoldst/Documents/research/20c/hls/tmhls/models/test/"
         list(model_dir=model_dir,
              keys_file=file.path(model_dir,"keys.csv"),
-             doctops_file=file.path(model_dir,"doc_topics.csv"))
+             doctops_file=file.path(model_dir,"doc_topics.csv"),
+             dfr_data_root="~/Developer/dfr-analysis/test_data",
+             journal_dirs="pmla_sample",
+             model_smoothed=F,
+             model_normalized=F)
     } else if(model=="ahr_k100_v20000") {
         model_dir <- "~/Documents/research/20c/hls/tmhls/models/ahr_k100_v20000/"
         list(model_dir=model_dir,
              journal_dirs="AHR",
-             model_smoothed=F)
+             model_smoothed=F,
+             model_normalized=F)
     } else if(model=="hls_k100_v100000") {
         model_dir <- "~/Documents/research/20c/hls/tmhls/models/hls_k100_v100000/"
 
@@ -33,7 +38,8 @@ model_files <- function(model) {
              doctops_file=gzfile(file.path(model_dir,"doc_topics.csv.gz")))
     } else if(model=="hls_k200_v105") {
         list(model_dir="~/Documents/research/20c/hls/tmhls/models/HLSk200v105/",
-             model_smoothed=F)
+             model_smoothed=F,
+             model_normalized=F)
     } else if(model=="hls_k48_v100K") {
         list(model_dir="~/Documents/research/20c/hls/tmhls/models/hls_k48_v100K/",
              model_smoothed=T)
@@ -41,7 +47,8 @@ model_files <- function(model) {
         model_dir <- "~/Documents/research/20c/hls/tmhls/models/hls_k150_v100K/"
         list(model_dir=model_dir,
              keys_file=file.path(model_dir,"wkf_nosmooth.csv"),
-             model_smoothed=F)
+             model_smoothed=F,
+             model_normalized=F)
     } 
     else {
         stop("Specify a model to analyze.")
@@ -86,6 +93,7 @@ analyze_model <- function(
         generate_report=T,
         boxplot_time="10 years",
         model_smoothed=T,
+        model_normalized=T,
         log_scale=model_smoothed) {
 
     analyze_model_wd <- getwd()
@@ -116,13 +124,17 @@ analyze_model <- function(
 
     model$dtl <- doc_topics_long(model$doctops,metadata,
                                  meta_keep="pubdate")
+    dt_wide <- merge(model$doctops,metadata[,c("pubdate","id")],by="id")
 
     if(generate_report) {
         message("Generating report...")
 
-        topic_report(model$dtl,model$wkf,
+        topic_report(dt_long=model$dtl,
+                     wkf=model$wkf,
+                     dt_wide=dt_wide,
                      time_breaks=boxplot_time,
                      log_scale=log_scale,
+                     raw_counts=!model_normalized && !model_smoothed,
                      filename_base=report_dir)
         message("Reports saved to ",report_dir)
     }
