@@ -37,6 +37,11 @@ model_files <- function(model) {
     } else if(model=="hls_k48_v100K") {
         list(model_dir="~/Documents/research/20c/hls/tmhls/models/hls_k48_v100K/",
              model_smoothed=T)
+    } else if(model=="hls_k150_v100K") {
+        model_dir <- "~/Documents/research/20c/hls/tmhls/models/hls_k150_v100K/"
+        list(model_dir=model_dir,
+             keys_file=file.path(model_dir,"wkf_nosmooth.csv"),
+             model_smoothed=F)
     } 
     else {
         stop("Specify a model to analyze.")
@@ -56,7 +61,6 @@ import_model <- function(keys,doctops) {
     # topic words?
 }
 
-
 # analyze_model
 #
 # main function
@@ -66,6 +70,7 @@ analyze_model <- function(
         doctops_file=file.path(model_dir,"doc_topics.csv"),
         keys_file=file.path(model_dir,"keys.csv"),
         report_dir=file.path(model_dir,"report"),
+        keys_summary_file=file.path(report_dir,"keys_summary.csv"),
         dfr_analysis_root="~/Developer/dfr-analysis",
         dfr_analysis_source=file.path(dfr_analysis_root,"source_all.R"),
         dfr_data_root="~/Documents/research/20c/hls/tmhls/dfr-data" ,
@@ -78,6 +83,7 @@ analyze_model <- function(
                        "res1925-1980",
                        "res1981-2012"),
         dfr_dirs=file.path(dfr_data_root,journal_dirs),
+        generate_report=T,
         boxplot_time="10 years",
         model_smoothed=T,
         log_scale=model_smoothed) {
@@ -111,13 +117,24 @@ analyze_model <- function(
     model$dtl <- doc_topics_long(model$doctops,metadata,
                                  meta_keep="pubdate")
 
-    message("Generating report...")
-    topic_report(model$dtl,model$wkf,
-                 time_breaks=boxplot_time,
-                 log_scale=log_scale,
-                 filename_base=report_dir)
+    if(generate_report) {
+        message("Generating report...")
 
-    message("Reports saved to ",report_dir)
+        topic_report(model$dtl,model$wkf,
+                     time_breaks=boxplot_time,
+                     log_scale=log_scale,
+                     filename_base=report_dir)
+        message("Reports saved to ",report_dir)
+    }
+    else {
+        message("Skipping report generation")
+    }
+
+    write.csv(wkf_kf(model$wkf),keys_summary_file,
+              quote=F,row.names=F)
+
+    message("Saved summary of top key words to ",keys_summary_file)
+
 
     # allow results to persist
     list(model=model,metadata=metadata)
