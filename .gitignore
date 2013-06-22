@@ -5,3 +5,5 @@ dfr-data
 
 document_lengths.csv
 .Rproj.user
+
+*.rda
