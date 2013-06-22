@@ -277,7 +277,7 @@ compare_words <- function(commandvector, wordbyyear, wordbyyearwords, yearsequen
   correlations <- numeric()
   for (word in top50words) {
     idx <- which(wordbyyearwords == word) 
-    yearlyvalues <- yearlyvalues + wordbyyear[idx, ]
+    yearlyvalues <- wordbyyear[idx, ]
     acorrelation <- cor(yearlyvalues, TopicFreqs[TopNum, ], method="pearson")
     correlations <- c(correlations, acorrelation)
   }
