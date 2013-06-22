@@ -2,7 +2,7 @@
 
 library(ggplot2)
 
-metadata_directory <- '~/Journals/tmhls/' 
+metadata_directory <- '~/Journals/metadata/' 
 
 userinput <- readline('Are you modeling a) AHR or b) the collection of literary journals? ')
 if (userinput == 'a') {
