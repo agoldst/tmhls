@@ -48,7 +48,10 @@ model_files <- function(model) {
         list(model_dir=model_dir,
              keys_file=file.path(model_dir,"wkf_nosmooth.csv"),
              model_smoothed=F,
-             model_normalized=F)
+             model_normalized=F,
+             generate_report=F,
+             instances_file=path.expand("~/Documents/research/20c/hls/tmhls/models/hls_k48_v100K/journals.mallet"),
+             generate_tym=T)
     } 
     else {
         stop("Specify a model to analyze.")
@@ -78,6 +81,9 @@ analyze_model <- function(
         keys_file=file.path(model_dir,"keys.csv"),
         report_dir=file.path(model_dir,"report"),
         keys_summary_file=file.path(report_dir,"keys_summary.csv"),
+        generate_tym=F,
+        instances_file=file.path(model_dir,"journals.mallet"),
+        tym_result_file=file.path(report_dir,"tym_result.rda"), 
         dfr_analysis_root="~/Developer/dfr-analysis",
         dfr_analysis_source=file.path(dfr_analysis_root,"source_all.R"),
         dfr_data_root="~/Documents/research/20c/hls/tmhls/dfr-data" ,
@@ -147,8 +153,27 @@ analyze_model <- function(
 
     message("Saved summary of top key words to ",keys_summary_file)
 
+    result <- list(model=model,metadata=metadata)
+
+    if(generate_tym) {
+        message("Reloading instances from ",instances_file)
+        instances <- read_instances(instances_file)
+        message("Generating term-document matrix")
+        tdm <- instances_tdm(instances,big=T)
+
+        message("Calculating term-year matrix")
+        tym_result <- term_year_matrix(metadata=metadata,
+                                       tdm=tdm,
+                                       big=T,
+                                       instances=instances)
+        message("Saving result list to ",tym_result_file) 
+        save(tym_result,file=tym_result_file) 
+
+        result$tym_result <- tym_result 
+    }
 
     # allow results to persist
-    list(model=model,metadata=metadata)
+
+    result
 }
 
