@@ -241,7 +241,7 @@ print_words <- function(commandvector, wordbyyear, wordbyyearwords, yearsequence
     yearlyvalues <- yearlyvalues + wordbyyear[idx, ]
   }
   par(mar = c(4,4,4,4))	
-  p <- qplot(yearsequence, yearlyvalues, geom = c("point", "smooth"), span = 0.5, ylab = "sum of all occurrences (in and out of topic) for the top 50 words", xlab = "", main = paste('Topic', TopNum, ':', Phi[[TopNum]][1], Phi[[TopNum]][2], Phi[[TopNum]][3], Phi[[TopNum]][4], Phi[[TopNum]][5], Phi[[TopNum]][6], Phi[[TopNum]][7], Phi[[TopNum]][8], Phi[[TopNum]][9], Phi[[TopNum]][10]))
+  p <- qplot(yearsequence, yearlyvalues, geom = c("point", "smooth"), span = 0.5, ylab = "sum of all occurrences (in and out of topic) for the top 50 words", xlab = "", main = paste('Top 50 words in topic', TopNum, ':', Phi[[TopNum]][1], Phi[[TopNum]][2], Phi[[TopNum]][3], Phi[[TopNum]][4], Phi[[TopNum]][5], Phi[[TopNum]][6], Phi[[TopNum]][7], Phi[[TopNum]][8], Phi[[TopNum]][9], Phi[[TopNum]][10]))
   suppressMessages(print(p))
   p
 }
@@ -255,8 +255,8 @@ compare_words <- function(commandvector, wordbyyear, wordbyyearwords, yearsequen
       cat('\n')
     }
   }
-  cat('Comparing the aggregate normalized frequency of the 50 most salient words in topic', TopNum, '\n')
-  cat('to the normalized frequency of the topic.\n')
+  cat('\nPlotting the aggregate normalized frequency of the 50 most salient words in topic', TopNum, '\n')
+  cat('to the normalized frequency of the topic.\n\n')
   timespan <- length(yearsequence)
   top50words <- Phi[[TopNum]]
   yearlyvalues <- numeric(length(yearsequence))
@@ -272,6 +272,24 @@ compare_words <- function(commandvector, wordbyyear, wordbyyearwords, yearsequen
   p <- p + geom_point() + geom_smooth() + scale_colour_manual(values = chromatic) + scale_size_manual(values = c(0.8, 0.8)) + scale_shape_manual(values = c(1, 2)) + scale_x_continuous(" ") + scale_y_continuous(" ")
   p <- p + ggtitle(paste('Topic', TopNum, ':', Phi[[TopNum]][1], Phi[[TopNum]][2], Phi[[TopNum]][3], Phi[[TopNum]][4], Phi[[TopNum]][5], Phi[[TopNum]][6], Phi[[TopNum]][7], Phi[[TopNum]][8], Phi[[TopNum]][9], Phi[[TopNum]][10]))
   suppressMessages(print(p))
+  
+  cat("Now measuring the Pearson correlation between individual words and topic.\n")
+  correlations <- numeric()
+  for (word in top50words) {
+    idx <- which(wordbyyearwords == word) 
+    yearlyvalues <- yearlyvalues + wordbyyear[idx, ]
+    acorrelation <- cor(yearlyvalues, TopicFreqs[TopNum, ], method="pearson")
+    correlations <- c(correlations, acorrelation)
+  }
+  names(correlations) <- top50words
+  correlations <- sort(correlations)
+  idx = 0
+  for (i in 1:50) {
+    acorrelation = correlations[i]
+    cat(names(acorrelation), "->", acorrelation, " | ", sep = " ")
+    idx = idx + 1
+    if (idx %% 5 == 0) cat('\n') 
+  }
   p
 }
 
@@ -305,8 +323,21 @@ par(adj = 0)
 repeat {
 	Proceed = FALSE
 	while (!Proceed) {
+    
 		Word <- readline('Enter a word or a topic#: ')
+    Word <- gsub(" ", "", Word)
+    # remove spaces which people may insert by accident after a comma
+    
     containscomma <- sum(grep(",", Word))
+    
+    # All entries containing commas are instructions to plot aggregate word frequencies
+    # rather than a topic as such
+    # You can say "words,80" to plot the top 50 words in topic 80, or "compare,80" to
+    # compare that to the topic frequency. Or you can provide a comma-separated list of
+    # words to be summed and graphed.
+    # In every case we're normalizing these frequencies relative to the whole corpus of
+    # 'fla' files.
+    
     if (containscomma > 0) {
       commandvector <- strsplit(Word, ',')[[1]]
       isinteger <- suppressWarnings(!is.na(as.integer(commandvector)))
@@ -319,7 +350,9 @@ repeat {
         p <- add_words(commandvector, wordbyyear, wordbyyearwords, yearsequence, Phi)
       }
       next
+      # back to top of loop
     }
+    
 		TopNum <- suppressWarnings(as.integer(Word))
 		if (!is.na(TopNum) | Word %in% AllWords | Word %in% Documents) Proceed = TRUE
 		else cat("That wasn't a valid entry, perhaps because we don't have that word.", '\n')
