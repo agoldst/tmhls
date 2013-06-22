@@ -1,10 +1,14 @@
 # Topic browser based on mallet output format.
 
+library(ggplot2)
+
+metadata_directory <- '~/Journals/tmhls/' 
+
 userinput <- readline('Are you modeling a) AHR or b) the collection of literary journals? ')
 if (userinput == 'a') {
-  meta_path = '~/Journals/tmhls/AHR_metadata.tsv'
+  meta_path <- paste(metadata_directory, 'AHR_metadata.tsv', sep = '')
 } else {
-  meta_path <- '~/Journals/tmhls/merged_metadata.tsv'
+  meta_path <- paste(metadata_directory, 'merged_metadata.tsv', sep = '')
 }
 
 message("Loading metadata ... ")
@@ -104,89 +108,218 @@ if (file.exists(correlation_path)) {
   save(top_correlations, file = correlation_path)
 }
 
-message("Measuring the aggregate sizes of topics and documents.")
-# Create topic sizes.
-TopicSize <- integer(TopicCount)
-TopicsByJournal <- array(data = 0, dim = c(TopicCount, JournalCount))
-JournalSums <- numeric(JournalCount)
+aggregate_path <- paste(data_directory, "/aggregate_sizes.rda", sep = "")
 
-for (i in 1: TopicCount) {
-  TopicSize[i] <- sum(Theta[i, ])
-  j = 0
-  for (name in journalnames) {
-    j = j + 1
-    TopicsByJournal[i, j] = TopicsByJournal[i, j] + sum(Theta[i, journals == name])
-    JournalSums[j] = JournalSums[j] + sum(Theta[i, journals == name])
+if (file.exists(aggregate_path)) {
+  load(aggregate_path, verbose = FALSE)
+} else {
+  
+  message("Measuring the aggregate sizes of topics and documents.")
+  # Create topic sizes.
+  TopicSize <- integer(TopicCount)
+  TopicsByJournal <- array(data = 0, dim = c(TopicCount, JournalCount))
+  JournalSums <- numeric(JournalCount)
+  
+  for (i in 1: TopicCount) {
+    TopicSize[i] <- sum(Theta[i, ])
+    j = 0
+    for (name in journalnames) {
+      j = j + 1
+      TopicsByJournal[i, j] = TopicsByJournal[i, j] + sum(Theta[i, journals == name])
+      JournalSums[j] = JournalSums[j] + sum(Theta[i, journals == name])
+    }
+    # normalize
+    TopicsByJournal[i, ] = TopicsByJournal[i, ] / TopicSize[i]
   }
-  # normalize
-  TopicsByJournal[i, ] = TopicsByJournal[i, ] / TopicSize[i]
+  
+  JournalSums = JournalSums / sum(JournalSums)
+  
+  # Create document sizes.
+  DocSize <- integer(doccount)
+  for (i in 1: doccount) {
+    DocSize[i] <- sum(Theta[ , i])
+  }
+  # Rank topics
+  TopicBulk <- TopicSize
+  TopicRanks <- integer(TopicCount)
+  names(TopicSize) <- 1:TopicCount
+  TopicSize <- sort(TopicSize, decreasing = TRUE)
+  for (i in 1: TopicCount) {
+    TopicRanks[i] <- which(names(TopicSize) == as.character(i))
+  }
+  
+  NumDocs <- length(Documents)
+  
+  MinDate = min(DocDates)
+  MaxDate = max(DocDates)
+  Timespan = (MaxDate - MinDate) + 1
+  TotalsPerYear <- integer(Timespan)
+  
+  # Summing number of words per year, by topic.
+  ThetaSum <- array(data=0, dim = c(TopicCount, Timespan))
+  for (i in 1: NumDocs) {
+    DateIndex = (DocDates[i] - MinDate) + 1
+    ThetaSum[ , DateIndex] = ThetaSum[ , DateIndex] + Theta[ , i]
+  }
+  
+  # Total number of words per year.
+  for (i in 1: Timespan) {
+    TotalsPerYear[i] = sum(ThetaSum[ , i])
+  }
+  
+  # Now we can normalize ThetaSum.
+  for (i in 1: TopicCount) {
+    HoldVector = ThetaSum[i ,] / TotalsPerYear
+    ThetaSum[i ,] <- HoldVector
+  }
+  save(ThetaSum, TotalsPerYear, Timespan, MinDate, MaxDate, NumDocs, TopicRanks, TopicSize, TopicsByJournal, DocSize, JournalSums, file = aggregate_path)
 }
 
-JournalSums = JournalSums / sum(JournalSums)
-
-# Create document sizes.
-DocSize <- integer(doccount)
-for (i in 1: doccount) {
-  DocSize[i] <- sum(Theta[ , i])
-}
-# Rank topics
-TopicBulk <- TopicSize
-TopicRanks <- integer(TopicCount)
-names(TopicSize) <- 1:TopicCount
-TopicSize <- sort(TopicSize, decreasing = TRUE)
-for (i in 1: TopicCount) {
-  TopicRanks[i] <- which(names(TopicSize) == as.character(i))
-}
-
-NumDocs <- length(Documents)
-
-MinDate = min(DocDates)
-MaxDate = max(DocDates)
-Timespan = (MaxDate - MinDate) + 1
-TotalsPerYear <- integer(Timespan)
-
-# Summing number of words per year, by topic.
-ThetaSum <- array(data=0, dim = c(TopicCount, Timespan))
-for (i in 1: NumDocs) {
-  DateIndex = (DocDates[i] - MinDate) + 1
-  ThetaSum[ , DateIndex] = ThetaSum[ , DateIndex] + Theta[ , i]
-}
-
-# Total number of words per year.
-for (i in 1: Timespan) {
-  TotalsPerYear[i] = sum(ThetaSum[ , i])
-}
-
-# Now we can normalize ThetaSum.
-for (i in 1: TopicCount) {
-  HoldVector = ThetaSum[i ,] / TotalsPerYear
-  ThetaSum[i ,] <- HoldVector
-}
-
-message("Getting the vocabulary and top keys for each topic.")
-# Get vocabulary.
-vocab_path <- paste(data_directory, "/vocab.txt", sep = "")
-AllWords <- scan(vocab_path, what = character())
+# message("Getting the vocabulary and top keys for each topic.")
+# # Get vocabulary.
+# vocab_path <- paste(data_directory, "/vocab.txt", sep = "")
+# AllWords <- scan(vocab_path, what = character())
 
 keys_path <- paste(data_directory, "/keys.csv", sep = "")
 keys <- read.csv(keys_path, as.is = TRUE, encoding = "UTF-8")
 
 frame_length = length(keys$word)
 Phi <- vector("list", TopicCount)
-
+AllWords <- character(0)
 for (i in 1: frame_length) {
 	Topic = keys$topic[i]
 	Phi[[Topic]] <- c(Phi[[Topic]], keys$word[i])
-	}
+  if (!keys$word[i] %in% AllWords) {
+    AllWords = c(AllWords, keys$word[i])
+  }
+}
+
+wordyear_path <- paste(metadata_directory, "wordbyyear.rda", sep = "")
+
+if (file.exists(wordyear_path)) {
+  message('Loading word by year data for this corpus, which I assume has not changed.')
+  load(wordyear_path, verbose = FALSE)
+} else {
+  yearlycountsfile = paste(metadata_directory, 'hls_yearlycounts.tsv', sep = '')
+  yearlycounts <- read.table(yearlycountsfile, header = TRUE, stringsAsFactors=FALSE, sep = '\t', fill = TRUE, nrows = 100000, quote = '')
+  yearsequence <- as.integer(yearlycounts$year)
+  yearsums <- as.integer(yearlycounts$sumtotal)
+  
+  wordbyyearfile = paste(metadata_directory, 'hls_wordcounts.tsv', sep = '')
+  wordcounts <-  read.table(wordbyyearfile, header = TRUE, stringsAsFactors=FALSE, sep = '\t', fill = TRUE, nrows = 100000, quote = '')
+  wordbyyearwords <- wordcounts$word
+  wordsums <- as.integer(wordcounts$total)
+  columns <- dim(wordcounts)[2]
+  rows <- dim(wordcounts)[1]
+  wordbyyear <- as.matrix(wordcounts[ , 3: columns])
+  if (dim(wordbyyear)[2] != length(yearsums)) {
+    print('Discrepancy in timespans of word-by-year files.')
+  }
+  message('Normalizing word by year data ...')
+  for (i in 1: rows) {
+    wordbyyear[i, ] = wordbyyear[i, ] / yearsums
+  }
+  remove(wordcounts)
+  save(wordbyyear, wordsums, wordbyyearwords, yearsums, yearsequence, file = wordyear_path)
+}
+
+print_words <- function(commandvector, wordbyyear, wordbyyearwords, yearsequence, Phi) {
+  TopNum <- as.integer(commandvector[2])
+  cat('TOPIC', TopNum,':', '\n')
+  for (wordnum in 1:50) {
+    cat(Phi[[TopNum]][wordnum], "  ")
+    if (wordnum %% 10 == 0) {
+      cat('\n')
+    }
+  }
+  cat('Plotting the aggregate normalized frequency of the 50 most salient words in topic', TopNum, '\n')
+  cat('including occurrences that may not actually be in the topic.\n')
+  top50words <- Phi[[TopNum]]
+  yearlyvalues <- numeric(length(yearsequence))
+  for (word in top50words) {
+    idx <- which(wordbyyearwords == word) 
+    yearlyvalues <- yearlyvalues + wordbyyear[idx, ]
+  }
+  par(mar = c(4,4,4,4))	
+  p <- qplot(yearsequence, yearlyvalues, geom = c("point", "smooth"), span = 0.5, ylab = "sum of all occurrences (in and out of topic) for the top 50 words", xlab = "", main = paste('Topic', TopNum, ':', Phi[[TopNum]][1], Phi[[TopNum]][2], Phi[[TopNum]][3], Phi[[TopNum]][4], Phi[[TopNum]][5], Phi[[TopNum]][6], Phi[[TopNum]][7], Phi[[TopNum]][8], Phi[[TopNum]][9], Phi[[TopNum]][10]))
+  suppressMessages(print(p))
+  p
+}
+
+compare_words <- function(commandvector, wordbyyear, wordbyyearwords, yearsequence, Phi, TopicFreqs) {
+  TopNum <- as.integer(commandvector[2])
+  cat('TOPIC', TopNum,':', '\n')
+  for (wordnum in 1:50) {
+    cat(Phi[[TopNum]][wordnum], "  ")
+    if (wordnum %% 10 == 0) {
+      cat('\n')
+    }
+  }
+  cat('Comparing the aggregate normalized frequency of the 50 most salient words in topic', TopNum, '\n')
+  cat('to the normalized frequency of the topic.\n')
+  timespan <- length(yearsequence)
+  top50words <- Phi[[TopNum]]
+  yearlyvalues <- numeric(length(yearsequence))
+  for (word in top50words) {
+    idx <- which(wordbyyearwords == word) 
+    yearlyvalues <- yearlyvalues + wordbyyear[idx, ]
+  }
+  PlotFrame <- data.frame(year = yearsequence, frequency = c(yearlyvalues, TopicFreqs[TopNum, ]), trend = as.factor(c(rep("Top 50 words", timespan), rep("Topic itself", timespan))))
+  par(mar = c(4,4,4,4))  
+  chromatic <- c('deeppink4', 'lightsteelblue4')
+  p <- ggplot(PlotFrame, aes(x = year, y = frequency, group = trend, shape = trend, colour = trend, size = trend))
+                         
+  p <- p + geom_point() + geom_smooth() + scale_colour_manual(values = chromatic) + scale_size_manual(values = c(0.8, 0.8)) + scale_shape_manual(values = c(1, 2)) + scale_x_continuous(" ") + scale_y_continuous(" ")
+  p <- p + ggtitle(paste('Topic', TopNum, ':', Phi[[TopNum]][1], Phi[[TopNum]][2], Phi[[TopNum]][3], Phi[[TopNum]][4], Phi[[TopNum]][5], Phi[[TopNum]][6], Phi[[TopNum]][7], Phi[[TopNum]][8], Phi[[TopNum]][9], Phi[[TopNum]][10]))
+  suppressMessages(print(p))
+  p
+}
+
+add_words <- function(commandvector, wordbyyear, wordbyyearwords, yearsequence, Phi) {
+  cat('Plotting the aggregate normalized frequency of the words you specified.\n')
+  yearlyvalues <- numeric(length(yearsequence))
+  for (word in commandvector) {
+    if (word %in% wordbyyearwords) {
+      idx <- which(wordbyyearwords == word) 
+      yearlyvalues <- yearlyvalues + wordbyyear[idx, ]
+    }
+  }
+  par(mar = c(4,4,4,4))  
+  p <- qplot(yearsequence, yearlyvalues, geom = c("point", "smooth"), span = 0.5, ylab = "normalized sum of occurrences", xlab = "", main = paste(commandvector, collapse = " "))
+  suppressMessages(print(p))
+  p
+}
 
 par(mar = c(4,4,4,4))
 options(width = 70)
+options(warn = -1)
+
+# Fill NAs
+NormalizedTopicFreqs <- array(data=0, dim = c(TopicCount, Timespan))
+for (i in 1: TopicCount) {
+  NormalizedTopicFreqs[i, ] <- ThetaSum[i, ]
+  NormalizedTopicFreqs[i, is.na(NormalizedTopicFreqs[i, ])] <- 0
+}
 
 par(adj = 0)
 repeat {
 	Proceed = FALSE
 	while (!Proceed) {
 		Word <- readline('Enter a word or a topic#: ')
+    containscomma <- sum(grep(",", Word))
+    if (containscomma > 0) {
+      commandvector <- strsplit(Word, ',')[[1]]
+      isinteger <- suppressWarnings(!is.na(as.integer(commandvector)))
+      # That's a good example of something Python does a lot better!
+      if (isinteger[2] & commandvector[1] == "words") {
+        p <- print_words(commandvector, wordbyyear, wordbyyearwords, yearsequence, Phi)
+      } else if (isinteger[2]) {
+        p <- compare_words(commandvector, wordbyyear, wordbyyearwords, yearsequence, Phi, NormalizedTopicFreqs)
+      } else {
+        p <- add_words(commandvector, wordbyyear, wordbyyearwords, yearsequence, Phi)
+      }
+      next
+    }
 		TopNum <- suppressWarnings(as.integer(Word))
 		if (!is.na(TopNum) | Word %in% AllWords | Word %in% Documents) Proceed = TRUE
 		else cat("That wasn't a valid entry, perhaps because we don't have that word.", '\n')
@@ -225,15 +358,11 @@ repeat {
 	
 	cat('\n')
 	
-	# Generate smoothed curve.
-	Smoothed <- numeric(Timespan)
-	for (i in 1: Timespan) {
-		Smoothed[i] = ThetaSum[TopNum, i]
-		Smoothed[is.na(Smoothed)] <- 0
-		}
+  Smoothed <- NormalizedTopicFreqs[TopNum, ]
 	par(mar = c(4,4,4,4))	
-	scatter.smooth(seq(MinDate, MaxDate), Smoothed*100, span = 0.33, col = "slateblue3", ylab = "% of words in the topic", xlab = "", main = paste('Topic', TopNum, ':', Phi[[TopNum]][1], Phi[[TopNum]][2], Phi[[TopNum]][3], Phi[[TopNum]][4], Phi[[TopNum]][5], Phi[[TopNum]][6], Phi[[TopNum]][7], Phi[[TopNum]][8]))
-	
+	p <- qplot(seq(MinDate, MaxDate), Smoothed*100, geom = c("point", "smooth"), span = 0.5, ylab = "% of words in the topic", xlab = "", main = paste('Topic', TopNum, ':', Phi[[TopNum]][1], Phi[[TopNum]][2], Phi[[TopNum]][3], Phi[[TopNum]][4], Phi[[TopNum]][5], Phi[[TopNum]][6], Phi[[TopNum]][7], Phi[[TopNum]][8], Phi[[TopNum]][9], Phi[[TopNum]][10]))
+	suppressMessages(print(p + theme_bw()))
+  
 	cat('TOPIC', TopNum,':', '\n')
   for (wordnum in 1:50) {
     cat(Phi[[TopNum]][wordnum], "  ")
