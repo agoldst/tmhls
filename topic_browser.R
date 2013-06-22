@@ -286,7 +286,7 @@ compare_words <- function(commandvector, wordbyyear, wordbyyearwords, yearsequen
   idx = 0
   for (i in 1:50) {
     acorrelation = correlations[i]
-    cat(names(acorrelation), "->", acorrelation, " | ", sep = " ")
+    cat(names(acorrelation), "=", acorrelation, " | ", sep = " ")
     idx = idx + 1
     if (idx %% 5 == 0) cat('\n') 
   }
@@ -308,6 +308,29 @@ add_words <- function(commandvector, wordbyyear, wordbyyearwords, yearsequence, 
   p
 }
 
+look_up_word <- function(TopicCount, Phi, Word) {
+  cat('These are the topics most closely related to', Word, '.\n')
+  Hits <- numeric(0)
+  NumHits <- 0
+  Indices <- numeric(0)
+  for (i in 1: TopicCount) {
+    if (Word %in% Phi[[i]]) {
+      NumHits <- NumHits + 1
+      Hits <- c(Hits, which(Phi[[i]] == Word))
+      Indices <- c(Indices, i)
+    }
+  }
+  names(Hits) <- Indices
+  Hits <- sort(Hits, decreasing = FALSE)
+  cat('\n')
+  if (NumHits > 5) NumHits <- 5
+  for (i in 1: NumHits) {
+    Top <- as.integer(names(Hits[i]))
+    cat("Topic", Top, ":", Phi[[Top]][1], Phi[[Top]][2], Phi[[Top]][3], Phi[[Top]][4], Phi[[Top]][5], Phi[[Top]][6], Phi[[Top]][7], Phi[[Top]][8], '\n')
+  }
+}
+
+
 par(mar = c(4,4,4,4))
 options(width = 70)
 options(warn = -1)
@@ -319,71 +342,71 @@ for (i in 1: TopicCount) {
   NormalizedTopicFreqs[i, is.na(NormalizedTopicFreqs[i, ])] <- 0
 }
 
+instructions <- function() {
+  cat("You may enter a word to see topics where that word is salient, or a number\n")
+  cat("to graph that topic. You can also enter two special commands. 'word,80' will\n")
+  cat("graph the aggregate frequency of the top 50 words in topic #80. 'compare,80'\n")
+  cat("will compare that aggregate frequency to the frequency of the topic itself.\n")
+  cat("You can enter a list of comma-separated words to graph their aggregate frequency,\n")
+  cat("or a word followed by a single comma to graph just one.\n")
+}
+
 par(adj = 0)
+instructions()
 repeat {
-	Proceed = FALSE
-	while (!Proceed) {
     
-		Word <- readline('Enter a word or a topic#: ')
-    Word <- gsub(" ", "", Word)
-    # remove spaces which people may insert by accident after a comma
+	Word <- readline('Enter a word, a topic#, or "#help" for help: ')
+  Word <- gsub(" ", "", Word)
+  # remove spaces which people may insert by accident after a comma
+  
+  if (Word == "#help") {
+    instructions()
+    next
+  }
     
-    containscomma <- sum(grep(",", Word))
+  containscomma <- sum(grep(",", Word))
     
-    # All entries containing commas are instructions to plot aggregate word frequencies
-    # rather than a topic as such
-    # You can say "words,80" to plot the top 50 words in topic 80, or "compare,80" to
-    # compare that to the topic frequency. Or you can provide a comma-separated list of
-    # words to be summed and graphed.
-    # In every case we're normalizing these frequencies relative to the whole corpus of
-    # 'fla' files.
-    
-    if (containscomma > 0) {
-      commandvector <- strsplit(Word, ',')[[1]]
-      isinteger <- suppressWarnings(!is.na(as.integer(commandvector)))
-      # That's a good example of something Python does a lot better!
-      if (isinteger[2] & commandvector[1] == "words") {
-        p <- print_words(commandvector, wordbyyear, wordbyyearwords, yearsequence, Phi)
-      } else if (isinteger[2]) {
-        p <- compare_words(commandvector, wordbyyear, wordbyyearwords, yearsequence, Phi, NormalizedTopicFreqs)
-      } else {
-        p <- add_words(commandvector, wordbyyear, wordbyyearwords, yearsequence, Phi)
-      }
+  # All entries containing commas are instructions to plot aggregate word frequencies
+  # rather than a topic as such
+  # You can say "words,80" to plot the top 50 words in topic 80, or "compare,80" to
+  # compare that to the topic frequency. Or you can provide a comma-separated list of
+  # words to be summed and graphed.
+  # In every case we're normalizing these frequencies relative to the whole corpus of
+  # 'fla' files.
+  
+  if (containscomma > 0) {
+    commandvector <- strsplit(Word, ',')[[1]]
+    if (length(commandvector) < 2) {
+      p <- add_words(commandvector, wordbyyear, wordbyyearwords, yearsequence, Phi)
       next
-      # back to top of loop
     }
-    
-		TopNum <- suppressWarnings(as.integer(Word))
-		if (!is.na(TopNum) | Word %in% AllWords | Word %in% Documents) Proceed = TRUE
-		else cat("That wasn't a valid entry, perhaps because we don't have that word.", '\n')
-		}
+    isinteger <- suppressWarnings(!is.na(as.integer(commandvector)))
+    # That's a good example of something Python does a lot better!
+    if (isinteger[2] & commandvector[1] == "words") {
+      p <- print_words(commandvector, wordbyyear, wordbyyearwords, yearsequence, Phi)
+    } else if (isinteger[2]) {
+      p <- compare_words(commandvector, wordbyyear, wordbyyearwords, yearsequence, Phi, NormalizedTopicFreqs)
+    } else {
+      p <- add_words(commandvector, wordbyyear, wordbyyearwords, yearsequence, Phi)
+    }
+    next
+    # back to top of loop
+  }
+  
+	TopNum <- suppressWarnings(as.integer(Word))
+	if (!is.na(TopNum) | Word %in% AllWords | Word %in% Documents) Proceed = TRUE
+	else {
+    cat("That wasn't a valid entry, perhaps because we don't have that word.", '\n')
+    next
+	}
 	
 	# The following section deals with the case where the user has
 	# entered a word to look up.
 	
 	if (Word %in% AllWords) {
-		Hits <- numeric(0)
-		NumHits <- 0
-		Indices <- numeric(0)
-		for (i in 1: TopicCount) {
-			if (Word %in% Phi[[i]]) {
-				NumHits <- NumHits + 1
-				Hits <- c(Hits, which(Phi[[i]] == Word))
-				Indices <- c(Indices, i)
-				}
-			}
-		names(Hits) <- Indices
-		Hits <- sort(Hits, decreasing = FALSE)
-		cat('\n')
-		if (NumHits > 5) NumHits <- 5
-		for (i in 1: NumHits) {
-			Top <- as.integer(names(Hits[i]))
-			cat("Topic", Top, ":", Phi[[Top]][1], Phi[[Top]][2], Phi[[Top]][3], Phi[[Top]][4], Phi[[Top]][5], Phi[[Top]][6], Phi[[Top]][7], Phi[[Top]][8], '\n')
-			}
-		User <- readline('Which of these topics do you select? ')
-		TopNum <- as.integer(User)
-		if (is.na(TopNum)) TopNum <- 1
-		}
+		look_up_word(TopicCount, Phi, Word)
+    next
+	}
 				
 	if (TopNum < 1) TopNum <- 1
 	if (TopNum > TopicCount) TopNum <- TopicCount	
