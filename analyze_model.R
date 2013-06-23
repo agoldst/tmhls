@@ -155,25 +155,46 @@ analyze_model <- function(
 
     result <- list(model=model,metadata=metadata)
 
-    if(generate_tym) {
-        message("Reloading instances from ",instances_file)
-        instances <- read_instances(instances_file)
-        message("Generating term-document matrix")
-        tdm <- instances_tdm(instances,big=T)
-
-        message("Calculating term-year matrix")
-        tym_result <- term_year_matrix(metadata=metadata,
-                                       tdm=tdm,
-                                       big=T,
-                                       instances=instances)
-        message("Saving result list to ",tym_result_file) 
-        save(tym_result,file=tym_result_file) 
-
-        result$tym_result <- tym_result 
-    }
 
     # allow results to persist
 
     result
 }
 
+generate_tym <- function(
+        instances_file,
+        tym_result_file="tym.rda",
+        dfr_data_root="~/Documents/research/20c/hls/tmhls/dfr-data" ,
+        journal_dirs=c("elh_ci_all",
+                       "mlr1905-1970",
+                       "mlr1971-2013",
+                       "modphil_all",
+                       "nlh_all",
+                       "pmla_all",
+                       "res1925-1980",
+                       "res1981-2012"),
+        dfr_dirs=file.path(dfr_data_root,journal_dirs),
+        dfr_analysis_root="~/Developer/dfr-analysis",
+        dfr_analysis_source=file.path(dfr_analysis_root,"source_all.R")) {
+
+    analyze_model_wd <- getwd()
+    setwd(dfr_analysis_root)
+    source(dfr_analysis_source)
+    topics_rmallet_setup()
+    setwd(analyze_model_wd)
+
+    message("Reading metadata") 
+    metadata <- read_metadata(file.path(dfr_dirs,"citations.CSV"))
+    message("Reloading instances from ",instances_file)
+    instances <- read_instances(instances_file)
+    message("Generating term-document matrix")
+    tdm <- instances_tdm(instances,big=T,verbose=T)
+
+    message("Calculating term-year matrix")
+    tym_result <- term_year_matrix(metadata=metadata,
+                                   tdm=tdm,
+                                   big=T,
+                                   instances=instances)
+    message("Saving result list to ",tym_result_file) 
+    save(tym_result,file=tym_result_file) 
+}
