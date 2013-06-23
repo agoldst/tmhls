@@ -1,14 +1,28 @@
 # Topic browser based on mallet output format.
 
+topic_browser <- function(
+        metadata_directory="~/Journals/metadata",
+        wordyear_path=file.path(metadata_directory, "wordbyyear.rda"),
+        collection=NULL,
+        doctopics_file=NULL) {
+
+last_wd <- getwd()
+metadata_directory <- normalizePath(metadata_directory)
+wordyear_path <- normalizePath(wordyear_path)
+
 library(ggplot2)
 
-metadata_directory <- '~/Journals/metadata/' 
+if(is.null(collection)) {
+    userinput <- readline('Are you modeling a) AHR or b) the collection of literary journals? ')
+    collection <- ifelse(userinput=="a","ahr","hls")
+}
 
-userinput <- readline('Are you modeling a) AHR or b) the collection of literary journals? ')
-if (userinput == 'a') {
-  meta_path <- paste(metadata_directory, 'AHR_metadata.tsv', sep = '')
+if(collection=="ahr") {
+  meta_path <- file.path(metadata_directory, 'AHR_metadata.tsv')
+} else if(collection=="hls") {
+  meta_path <- file.path(metadata_directory, 'merged_metadata.tsv')
 } else {
-  meta_path <- paste(metadata_directory, 'merged_metadata.tsv', sep = '')
+    stop("Unknown collection: ",collection)
 }
 
 message("Loading metadata ... ")
@@ -16,25 +30,21 @@ Metadata <- read.table(meta_path, header = TRUE, stringsAsFactors=FALSE, sep = '
 
 # We're going to process metadata after getting a list of the documents actually in this model.
 
-# extract_directory
-# given the path to a file, extracts only the directory part
+if(is.null(doctopics_file)) {
+    cat('This script expects that all files for a model will be contained in the same folder.\n')
+    cat('It will ask you for the location of a doc_topics.csv file, and then\n')
+    cat('expect to find other files -- vocab.txt and keys.csv -- in the same folder.\n')
 
-extract_directory <- function(astring) {
-  part_vector <- strsplit(astring, '/')[[1]]
-  paste(part_vector[1:(length(part_vector) - 1)], collapse = '/')
+    DummyVar <- readline("Hit return when you're ready to browse for doc_topics.csv: ")
+    doctopics_file <- file.choose()
+} else {
+    doctopics_file <- normalizePath(doctopics_file)
 }
 
-cat('This script expects that all files for a model will be contained in the same folder.\n')
-cat('It will ask you for the location of a doc_topics.csv file, and then\n')
-cat('expect to find other files -- vocab.txt and keys.csv -- in the same folder.\n')
-
-DummyVar <- readline("Hit return when you're ready to browse for doc_topics.csv: ")
-file <- file.choose()
-
-data_directory <- extract_directory(file)
+data_directory <- dirname(doctopics_file)
 setwd(data_directory)
 
-doc_frame <- read.csv(file, header = TRUE, quote="", as.is = TRUE)
+doc_frame <- read.csv(doctopics_file, header = TRUE, quote="", as.is = TRUE)
 
 DocIndices <- doc_frame$id
 
@@ -87,10 +97,11 @@ Theta <- t(as.matrix(subset(doc_frame, select = -id)))
 TopicCount <- dim(Theta)[1]
 DocCount <- dim(Theta)[2]
 
-correlation_path <- paste(data_directory, "/top_correlations.rda", sep = "")
+correlation_path <- file.path(data_directory, "top_correlations.rda")
 
 if (file.exists(correlation_path)) {
-  load(correlation_path, verbose = FALSE)
+  #load(correlation_path, verbose = FALSE)
+  load(correlation_path) # no verbose on my system
   message("Loading previously calculated correlations, which I assume have not changed.")
 } else {
   message("Finding correlations of topics with each other. Can easily take 10-15 min...")
@@ -108,10 +119,11 @@ if (file.exists(correlation_path)) {
   save(top_correlations, file = correlation_path)
 }
 
-aggregate_path <- paste(data_directory, "/aggregate_sizes.rda", sep = "")
+aggregate_path <- file.path(data_directory, "aggregate_sizes.rda")
 
 if (file.exists(aggregate_path)) {
-  load(aggregate_path, verbose = FALSE)
+  load(aggregate_path) # no verbose on my system
+  #load(aggregate_path, verbose = FALSE)
 } else {
   
   message("Measuring the aggregate sizes of topics and documents.")
@@ -140,7 +152,6 @@ if (file.exists(aggregate_path)) {
     DocSize[i] <- sum(Theta[ , i])
   }
   # Rank topics
-  TopicBulk <- TopicSize
   TopicRanks <- integer(TopicCount)
   names(TopicSize) <- 1:TopicCount
   TopicSize <- sort(TopicSize, decreasing = TRUE)
@@ -180,7 +191,7 @@ if (file.exists(aggregate_path)) {
 # vocab_path <- paste(data_directory, "/vocab.txt", sep = "")
 # AllWords <- scan(vocab_path, what = character())
 
-keys_path <- paste(data_directory, "/keys.csv", sep = "")
+keys_path <- file.path(data_directory, "keys.csv")
 keys <- read.csv(keys_path, as.is = TRUE, encoding = "UTF-8")
 
 frame_length = length(keys$word)
@@ -194,18 +205,18 @@ for (i in 1: frame_length) {
   }
 }
 
-wordyear_path <- paste(metadata_directory, "wordbyyear.rda", sep = "")
 
 if (file.exists(wordyear_path)) {
   message('Loading word by year data for this corpus, which I assume has not changed.')
-  load(wordyear_path, verbose = FALSE)
+  load(wordyear_path) # verbose?
+  # load(wordyear_path, verbose = FALSE)
 } else {
-  yearlycountsfile = paste(metadata_directory, 'hls_yearlycounts.tsv', sep = '')
+  yearlycountsfile = file.path(metadata_directory, 'hls_yearlycounts.tsv')
   yearlycounts <- read.table(yearlycountsfile, header = TRUE, stringsAsFactors=FALSE, sep = '\t', fill = TRUE, nrows = 100000, quote = '')
   yearsequence <- as.integer(yearlycounts$year)
   yearsums <- as.integer(yearlycounts$sumtotal)
   
-  wordbyyearfile = paste(metadata_directory, 'hls_wordcounts.tsv', sep = '')
+  wordbyyearfile = file.path(metadata_directory, 'hls_wordcounts.tsv')
   wordcounts <-  read.table(wordbyyearfile, header = TRUE, stringsAsFactors=FALSE, sep = '\t', fill = TRUE, nrows = 100000, quote = '')
   wordbyyearwords <- wordcounts$word
   wordsums <- as.integer(wordcounts$total)
@@ -355,13 +366,16 @@ par(adj = 0)
 instructions()
 repeat {
     
-	Word <- readline('Enter a word, a topic#, or "#help" for help: ')
+  Word <- readline('Enter a word, a topic number, "#help" or "#quit": ')
   Word <- gsub(" ", "", Word)
   # remove spaces which people may insert by accident after a comma
   
   if (Word == "#help") {
     instructions()
     next
+  }
+  if (Word == "#quit") {
+      break
   }
     
   containscomma <- sum(grep(",", Word))
@@ -426,7 +440,7 @@ repeat {
       cat('\n')
     }
   }
-	cat('OF', TopicCount, 'TOPICS this is #',TopicRanks[TopNum], 'in desc order, with', TopicBulk[TopNum], 'words.\n')
+	cat('OF', TopicCount, 'TOPICS this is #',TopicRanks[TopNum], 'in desc order, with', TopicSize[TopNum], 'words.\n')
   cat('\nRelated topics: \n')
 	the_top5 <- top_correlations[[TopNum]]
   for (topic in the_top5){
@@ -453,6 +467,8 @@ repeat {
     }
   }
   cat('\n')
-	}
+} # repeat { }
 		
+setwd(last_wd)
 	
+} # topic_browser()
