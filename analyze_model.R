@@ -218,7 +218,7 @@ read_corpus_info_files <- function(model_dir,
     vocab <- readLines(vocab_file)
     id_map <- readLines(id_map_file)
 
-    list(vocab,id_map)
+    list(vocab=vocab,id_map=id_map)
 }
 
 
@@ -228,10 +228,11 @@ read_corpus_info_files <- function(model_dir,
 # native format.
 #
 # topics: the function will save one file per topic, holding a single
-# list called tytm_result. The files aren't small although they *should*
-# be sparseMatrices. If you load more than one into the same environment
-# you'll clobber the tytm_result objects and be left only with the last
-# one you loaded. arRgh.
+# list called tytm_result. The data *should* be in sparseMatrices,
+# so these shouldn't be enormous files. Go ahead and set topics=1:k.
+# But if you load more than one of the resultant files into the same
+# environment you'll clobber the tytm_result objects and be left only
+# with the last one you loaded. arRgh.
 
 generate_tytm <- function(
         topics,
@@ -281,7 +282,7 @@ generate_tytm <- function(
 # load the "simplified state," i.e. the Gibbs sampling state aggregated into
 # doc-word-topic counts. Returns a reference to a big.matrix.
 
-load_ss <- function(
+load_ss <- function(model_dir=".",
         ss_file=file.path(model_dir,"state_simple.csv"),
         state_file=file.path(model_dir,"mallet_state.gz"),
         ss_script="python/simplify_state.py") {
