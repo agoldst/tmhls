@@ -26,6 +26,9 @@ def process_file(state_file):
         doc_tally = defaultdict(lambda : defaultdict(int))
         last_doc = 0    # assume we start at doc 0
 
+        # header line
+        print "doc,type,topic,count"
+
         for line in f:
             if line[0] == "#":
                 continue
