@@ -11,6 +11,7 @@ create_tdm <- function(filename) {
 
 setwd("~/Developer/dfr-analysis")
 source("source_all.R")
+topics_rmallet_setup()
 setwd("~/Documents/research/20c/hls/tmhls")
 source("analyze_model.R")
 
@@ -32,8 +33,7 @@ tdm_file <- file.path(model_dir,"tdm.rda")
 if (!file.exists(tdm_file)) { 
     message(tdm_file," is missing. Regenerating tdm (~10 mins)...")
     tdm <- create_tdm(model_dir,tdm_file)
-}
-else {
+} else {
     load(tdm_file)
 }
 
@@ -47,7 +47,7 @@ jym <- journal_year_matrix(tdm,metadata,info$id_map)
 
 # convert it to something ggplot-able
 series <- melt(jym)
-names(series) <- c("journal","year",count)
+names(series) <- c("journal","year","count")
 series$journal <- gsub("\t","",series$journal)
 p <- ggplot(series,aes(as.Date(year),fill=journal))
 
