@@ -61,7 +61,7 @@ model_files <- function(model) {
 # called by analyze_model
 
 import_model <- function(keys,doctops) { 
-    wkf <- read.csv(keys)
+    wkf <- read.csv(keys,as.is=T)
     doctops <- read.csv(doctops,as.is=T)
 
     list(wkf=wkf,
@@ -107,10 +107,6 @@ analyze_model <- function(
     topics_rmallet_setup()
     setwd(analyze_model_wd)
 
-    if(!file.exists(report_dir)) {
-        dir.create(report_dir)
-    }
-
     # do the analysis
 
     message("Loading metadata")
@@ -119,12 +115,17 @@ analyze_model <- function(
     message("Loading modeling results")
     model <- import_model(keys_file,doctops_file)
 
-    message("Converting document-topic matrix to long form") 
-    model$dtl <- doc_topics_long(model$doctops,metadata,
-                                 meta_keep="pubdate")
-    dt_wide <- merge(model$doctops,metadata[,c("pubdate","id")],by="id")
-
     if(generate_report) {
+
+        if(!file.exists(report_dir)) {
+            dir.create(report_dir)
+        }
+
+        message("Converting document-topic matrix to long form") 
+        model$dtl <- doc_topics_long(model$doctops,metadata,
+                                     meta_keep="pubdate")
+
+        dt_wide <- merge(model$doctops,metadata[,c("pubdate","id")],by="id")
         message("Generating report...")
 
         topic_report(dt_long=model$dtl,
@@ -135,16 +136,23 @@ analyze_model <- function(
                      raw_counts=!model_normalized && !model_smoothed,
                      filename_base=report_dir)
         message("Reports saved to ",report_dir)
+
+        write.csv(wkf_kf(model$wkf),keys_summary_file,
+                  quote=F,row.names=F)
+        message("Saved summary of top key words to ",keys_summary_file)
     }
     else {
         message("Skipping report generation")
     }
 
-    write.csv(wkf_kf(model$wkf),keys_summary_file,
-              quote=F,row.names=F)
-    message("Saved summary of top key words to ",keys_summary_file)
+    vocab <- readLines(file.path(model_dir,"vocab.txt"))
+    id_map <- readLines(file.path(model_dir,"id_map.txt"))
 
-    result <- list(model=model,metadata=metadata)
+    result <- list(wkf=model$wkf,
+                   metadata=metadata,
+                   vocab=vocab,
+                   id_map=id_map,
+                   doctops=model$doctops)
 
     # allow results to persist
     result
