@@ -12,6 +12,9 @@ from collections import defaultdict
 # information. For our purposes, we don't know the order of tokens in
 # documents, so we can "reduce" the state information to a list of
 # 4-tuples: doc,type,topic,count.
+#
+# We keep the zero-indexing of docs, types, and topics used by mallet, though 
+# in R we will typically add 1 to each of these on import.
 
 def process_file(state_file):
 
@@ -39,6 +42,10 @@ def process_file(state_file):
 
             line.strip()
             doc,source,pos,typeindex,word,topic = line.split()
+
+            doc = int(doc)
+            typeindex = int(typeindex)
+            topic = int(topic)
 
             if last_doc != doc:
                 output_tally(last_doc,doc_tally)
