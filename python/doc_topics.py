@@ -2,15 +2,14 @@ import sys
 
 from collections import defaultdict
 
-# Take a mallet state.gz file and produce a csv of doc-type-topic
-# counts. Output to stdout.
+# Take a simplified-mallet-state file (made by simplify_state.py) and
+# produce a csv of the doc-topic counts matrix. Output to stdout.
 #
-# USAGE: python simplify_state.py state.gz > state_tallied.csv
+# USAGE: python doc_topics.py state_simple.csv > document_topics.csv
 #
-# The mallet state is saved in a gz file with lots of redundant
-# information. For our purposes, we don't know the order of tokens in
-# documents, so we can "reduce" the state information to a list of
-# 4-tuples: doc,type,topic,count.
+# The results should be consistent with the matrix saved by
+# doc_topics_frame() in R. N.B. that the results of this script have no
+# headers and no id column.
 
 def process_file(ss_file,n_topics):
 
