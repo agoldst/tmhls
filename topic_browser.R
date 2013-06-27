@@ -152,6 +152,7 @@ if (file.exists(aggregate_path)) {
     DocSize[i] <- sum(Theta[ , i])
   }
   # Rank topics
+  TopicBulk <- TopicSize
   TopicRanks <- integer(TopicCount)
   names(TopicSize) <- 1:TopicCount
   TopicSize <- sort(TopicSize, decreasing = TRUE)
@@ -183,7 +184,7 @@ if (file.exists(aggregate_path)) {
     HoldVector = ThetaSum[i ,] / TotalsPerYear
     ThetaSum[i ,] <- HoldVector
   }
-  save(ThetaSum, TotalsPerYear, Timespan, MinDate, MaxDate, NumDocs, TopicRanks, TopicSize, TopicsByJournal, DocSize, JournalSums, file = aggregate_path)
+  save(ThetaSum, TotalsPerYear, Timespan, MinDate, MaxDate, NumDocs, TopicRanks, TopicSize, TopicBulk, TopicsByJournal, DocSize, JournalSums, file = aggregate_path)
 }
 
 # message("Getting the vocabulary and top keys for each topic.")
@@ -252,7 +253,7 @@ print_words <- function(commandvector, wordbyyear, wordbyyearwords, yearsequence
     yearlyvalues <- yearlyvalues + wordbyyear[idx, ]
   }
   par(mar = c(4,4,4,4))	
-  p <- qplot(yearsequence, yearlyvalues, geom = c("point", "smooth"), span = 0.5, ylab = "sum of all occurrences (in and out of topic) for the top 50 words", xlab = "", main = paste('Top 50 words in topic', TopNum, ':', Phi[[TopNum]][1], Phi[[TopNum]][2], Phi[[TopNum]][3], Phi[[TopNum]][4], Phi[[TopNum]][5], Phi[[TopNum]][6], Phi[[TopNum]][7], Phi[[TopNum]][8], Phi[[TopNum]][9], Phi[[TopNum]][10]))
+  p <- qplot(yearsequence, yearlyvalues, geom = c("point", "smooth"), span = 0.6, ylab = "sum of all occurrences (in and out of topic) for the top 50 words", xlab = "", main = paste('Top 50 words in topic', TopNum, ':', Phi[[TopNum]][1], Phi[[TopNum]][2], Phi[[TopNum]][3], Phi[[TopNum]][4], Phi[[TopNum]][5], Phi[[TopNum]][6], Phi[[TopNum]][7], Phi[[TopNum]][8], Phi[[TopNum]][9], Phi[[TopNum]][10]))
   suppressMessages(print(p))
   p
 }
@@ -440,7 +441,7 @@ repeat {
       cat('\n')
     }
   }
-	cat('OF', TopicCount, 'TOPICS this is #',TopicRanks[TopNum], 'in desc order, with', TopicSize[TopNum], 'words.\n')
+	cat('OF', TopicCount, 'TOPICS this is #',TopicRanks[TopNum], 'in desc order, with', TopicBulk[TopNum], 'words.\n')
   cat('\nRelated topics: \n')
 	the_top5 <- top_correlations[[TopNum]]
   for (topic in the_top5){
