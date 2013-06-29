@@ -15,12 +15,12 @@ def process_file(ss_file,n_topics):
 
     # utility function for accumulating our doc-topic tallies as we go
     def output_tally(tally):
+        line = ""
         for topic in range(n_topics):
-            sys.stdout.write(str(tally[topic]))
+            line += str(tally[topic])
             if topic + 1 != n_topics:
-                sys.stdout.write(",")
-            else:
-                print
+                line += ","
+        print line
 
     with open(ss_file) as f:
         doc_tally = defaultdict(int)
