@@ -85,7 +85,12 @@ mallet_word_plot(c("criticism","critic"),tym_result$tym,tym_result$yseq,m$vocab,
 Which articles?
 
 ```{r}
-cite_articles(m$metadata,top_documents(16,m$id_map,dtm=m$dtm,n=10)$id)
+# utility function
+cite_top_documents <- function(topic,n=10) { 
+  docs_frame <- top_documents(topic,m$id_map,m$dtm,n)
+  data.frame(citation=cite_articles(m$metadata,docs_frame$id),
+             weight=docs_frame$weight)
+}
 ```
 
 # The all-in-one
@@ -251,25 +256,33 @@ mallet_word_plot(words,tytm_result$tym,tytm_result$yseq,m$vocab,
 This overlays lines showing the time series of the occurrences of a word in the corpus with the number of occurrences of the word allocated to each of the topics.
 
 ```{r}
-word_topic_breakdown <- function(words,geom="area",verbose=T) { 
+word_topic_breakdown <- function(words,geom="area",verbose=T,plot_freq=F,
+                                 topics=1:m$n) { 
   # single word, but could tally up total for multiple words
   show_total <- length(words) > 1
   series_list <- vector("list",m$n)
   series_keep <- logical(m$n)
   cur <- 1
   topic_labels <- character()
-  for(topic in 1:m$n) {
+  if(plot_freq) {
+    totals <- colSums(tym_result$tym)   # totals for *all* topics
+  } else {
+    totals <- NULL
+  }
+  for(topic in topics) {
     load(sprintf("models/hls_k150_v100K/tytm/%03d.rda",topic))
     series <- term_year_series_frame(words,
                                      tytm_result$tym,tytm_result$yseq,
                                      m$vocab,
-                                     raw_counts=T,  # N.B. raw counts
-                                     total=show_total)
+                                     raw_counts=!plot_freq,
+                                     total=show_total,
+                                     denominator=totals)
     if(any(series$weight > 0)) {
       if(verbose) {
         message("Hits in series for topic",topic)
       }
-      series$topic <- sprintf("%03d",topic)
+      # series$topic <- sprintf("%03d",topic)
+      series$topic <- topic_name(topic,m$wkf,n=2)
       series_list[[cur]] <- series
       cur <- cur + 1
     } # (if)
@@ -278,7 +291,7 @@ word_topic_breakdown <- function(words,geom="area",verbose=T) {
   series_plot <- mallet_word_plot(words,
                                      tym_result$tym,tym_result$yseq,
                                      m$vocab,
-                                     plot_freq=F,   # N.B. raw counts
+                                     plot_freq=plot_freq,
                                      plot_total=show_total)
   if(geom=="line") {
     result <- series_plot + geom_line(data=series_frame,
@@ -286,9 +299,19 @@ word_topic_breakdown <- function(words,geom="area",verbose=T) {
   } else if(geom=="area") {
     result <- series_plot + geom_area(data=series_frame,
                                       aes(group=topic,fill=topic))
+  } else if(geom=="area_fill") {
+    result <- ggplot(series_frame,aes(x=year,y=weight,
+                                      group=topic,fill=topic)) +
+      geom_area(position="fill")
+  } else if(geom=="none") {
+    result <- ggplot(series_frame)
   } else {
-    stop("I don't know what to do with the geom ",geom)
+    stop("I don't know what to do with the geom parameter ",geom)
   }
+
+  result <- result + ggtitle(paste("Occurrences of",
+                                   paste(words,collapse="/"),
+                                   "in topics"))
   result
 }
 ```
@@ -313,9 +336,11 @@ word_topic_breakdown("interpretation")
 ```
 
 If you look at the frequency over the whole corpus:
+
 ```{r}
 mallet_word_plot("interpretation",tym_result$tym,tym_result$yseq,m$vocab,plot_freq=F)
 ```
+
 you see a scary-looking spike in the 1890s. This is not as scary as might seem, since the frequency in the 1890s is relative to many fewer total words and articles. Still, it turns out that there is one article with an extraordinarily large count of "interpretation"s:
 
 ```{r eval=F}
@@ -336,5 +361,64 @@ tdm[w,match(hit_id,m$id_map)] # 101
 ```
 
 
+# Foreign
 
+hand coded listing of foreign-language topics
 
+````
+003 OE gone after 1910
+*005 French names and titles, rise to 1920, fading glory after 1960
+011 Spanish some docs to 1930
+024 German names and title words peaks 1900s, 1940s
+034 Italian some through 1920s, one outlier ca. 1952 (10.2307/460030)
+**045 Spanish more presence in 1930-1970
+070 vdn daz man [OHG / MHG] up through 1910
+*076 French: rising to 1950, falling down, but always present
+078 plus montaigne rabelais decline to 1950
+081 latin quae esse a few docs through 1940
+083 oe mgh ohg [OE etymology] through the 1930s
+092 pe pat hym [ME with thorns], a few docs in early years only
+*095 German presence through 1960
+*103 italian titles: sporadic, appears on both ends of the century
+*107 French titles: steadily present  after 1910 in small amounts (< 0.5%)
+120 spanish portuguese cid: a few docs in 1910s, 1940
+**124 French rise to 1950, declinng through 1980
+127 text ms judas also includes Latin, present only before 1930
+132 Old french: pre 1930 only
+136 poe dutch german [misc. Germanic and Scandinavian], only in a few 1890 and 1930 outliers
+139 german germany mann: German titles and authors: steady rise from 1950
+141 same rilke mir: German: marginal except for docs in 1940, 1950
+
+*140 english language words
+
+047 [chaucer and middle english]
+061 [piers plowman pearl up through 1920]
+065 [elizabethan english]
+````
+
+My wrong way of counting negative postwar trends:
+```{r}
+foreign_topics <- c(3,5,11,24,34,45,70,76,78,81,83,92,95,103,107,120,124,127,132,136,139,141)
+nyrs <- ncol(m$yrly)
+y0 <- which(colnames(m$yrly) == "1940-01-01")
+for(i in foreign_topics) { print(cor.test(y0:nyrs,m$yrly[i,y0:nyrs],alternative="less")) }
+```
+
+Wrong because it's a bunch of confidence tests, because these are time series with auto-dependencies, because the topics themselves are not independent, etc.
+
+Anyway, I hand-count 15 "significant" negative correlations
+
+# N.B.
+
+128: hyphenations
+
+# "power" for Ted
+
+```{r}
+word_topic_breakdown("power",geom="area_fill")
+word_topic_breakdown("power",geom="area",plot_freq=T)
+word_topic_breakdown("power",geom="area",plot_freq=F)
+word_topic_breakdown("power",geom="line",plot_freq=T)
+word_topic_breakdown("power",geom="line")
+mallet_word_plot("power")
+```
