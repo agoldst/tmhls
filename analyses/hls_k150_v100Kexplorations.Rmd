@@ -1,0 +1,340 @@
+Explorations
+------------
+
+```{r setup}
+setwd("~/Documents/research/20c/hls/tmhls")
+library(Matrix)
+source("analyze_model.R")
+m <- do.call(analyze_model,model_files("hls_k150_v100K"))
+# tym_result:
+load("models/hls_k150_v100K/tym.rda")
+m$dtw <- merge(m$doctops,m$metadata[,c("id","pubdate")],by="id")
+m$yrly <- tm_yearly_totals(tm_wide=m$dtw)
+m$dtm <- doc_topics_matrix(m$doctops)
+corpus_meta <- m$metadata[m$metadata$id %in% m$id_map,]
+m$n <- ncol(m$dtm)
+m$yrly_j <- tm_yearly_totals_meta(m$doctops,m$metadata,m$yrly,
+                                vars="journaltitle")
+```
+
+```{r tdm,eval=F}
+# don't execute unless needed...
+# tdm:
+load("models/hls_k150_v100K/tdm.rda")
+```
+
+That's `r nrow(corpus_meta)` documents in the modeled corpus. How many authors?
+
+```{r}
+authors <- unlist(strsplit(corpus_meta$author,"\t",fixed=T))
+length(authors)
+length(unique(authors))
+```
+
+# The literature topic
+```{r}
+tm_yearly_line_plot(topics=94,raw_counts=F,.yearly_totals=m$yrly)
+```
+
+```{r}
+mallet_word_plot(c("literature","language"),tym_result$tym,tym_result$yseq,m$vocab,plot_total=F)
+```
+
+```{r}
+words <- topic_top_words(94,m$wkf,n=50)
+mallet_word_plot(words,tym_result$tym,tym_result$yseq,m$vocab,plot_total=T)
+```
+
+But be careful about "new literary history"...
+
+```{r}
+words <- setdiff(words,c("new","literary","history"))
+mallet_word_plot(words,tym_result$tym,tym_result$yseq,m$vocab,plot_total=T)
+```
+
+And dropping the journal *NLH* from the topic count:
+
+```{r}
+yrly_no_nlh <- subset(m$yrly_j,journaltitle != "New Literary History\t")
+tm_yearly_line_plot(topics=94,raw_counts=T,
+                    .yearly_totals=yrly_no_nlh,
+                    .yearly_overall=m$yrly)
+```
+
+# The criticism topic
+
+```{r}
+mallet_word_plot(topic_top_words(16,m$wkf,n=50),tym_result$tym,tym_result$yseq,m$vocab,plot_total=T)
+```
+
+```{r}
+tm_yearly_line_plot(topics=16,raw_counts=F,.yearly_totals=m$yrly)
+```
+
+Which topics hold the word in top 50?
+
+```{r}
+with(m,wkf$topic[wkf$word=="criticism"])
+with(m,wkf$topic[wkf$word=="critic"])
+```
+
+```{r}
+mallet_word_plot(c("criticism","critic"),tym_result$tym,tym_result$yseq,m$vocab,plot_total=T)
+```
+
+Which articles?
+
+```{r}
+cite_articles(m$metadata,top_documents(16,m$id_map,dtm=m$dtm,n=10)$id)
+```
+
+# The all-in-one
+
+```{r}
+# omit topics parameter to get them all
+p <- tm_yearly_line_plot(.yearly_totals=m$yrly,facet=T)
+# better to have a full rectangle
+p + facet_wrap(~topic,nrow=10)
+```
+
+# facts and evidence?
+
+```{r}
+mallet_word_plot(c("fact","facts","evidence","interpretation"),tym_result$tym,tym_result$yseq,m$vocab)
+```
+
+# verify doctops against state
+
+```{r eval=F}
+# build verification file
+system("python python/doc_topics.py models/hls_k150_v100K/state_simple.csv 150 > models/hls_k150_v100K/doc_topics_check.csv")
+check_doctops <- read.csv("models/hls_k150_v100K/doc_topics_check.csv",as.is=T,header=F)
+all(check_doctops==m$dtm)
+```
+
+# probing tf-idf scores
+
+```{r eval=F}
+tdm_tfidf <- tdm_tm(tdm)
+tdm_tfidf <- TermDocument_sparse(tdm_tfidf)
+search_term <- "found"
+hits <- m$id_map[order(tdm_tfidf[match(search_term,m$vocab),],decreasing=T)[1:5]]
+cite_articles(m$metadata,hits)
+```
+
+
+# Misclassified items that got into the corpus
+
+```{r}
+modphil <- subset(corpus_meta,journaltitle=="Modern Philology\t")
+# reviews are in 
+Epp <- subset(modphil,grepl("E",pagerange))
+```
+
+There are `r nrow(Epp)` misclassified reviews from *Modern Philology*:
+
+```{r results="asis"}
+cite_articles(Epp)
+```
+
+# Splitting out yearly counts by journal
+
+Let's take a look at topic `r topic_name(16,m$wkf)`.
+
+
+```{r}
+top16_journals_p <- topic_yearly_journals_plot(16,.yrly_j=m$yrly_j)
+print(top16_journals_p)
+```
+
+
+What happens if we take out *CI*? *PMLA*?
+
+```{r}
+top16_journals_p %+% subset(m$yrly_j,journaltitle != "Critical Inquiry\t")
+```
+
+```{r}
+top16_journals_p %+% subset(m$yrly_j,!(journaltitle %in%
+                                      c("Critical Inquiry\t","PMLA\t")))
+```
+
+# The grid of all topics over the years
+
+Here's the overall grid, with journal breakdowns as well:
+```{r}
+yj_m <- melt(m$yrly_j)
+tj_p <- ggplot(yj_m,
+               aes(x=as.Date(pubdate),
+                   y=value,
+                   group=journaltitle,
+                   fill=journaltitle))
+tj_p <- tj_p + geom_area() + facet_wrap(~ variable,nrow=10)
+# ggsave("models/hls_k150_v100K/report/topic_journal_grid.png",w=12,h=8)
+```
+
+
+146 looks like an oddball: `r topic_name(146,m$wkf,n=30)`. But it may be more coherent that we think. Even removing those initial very common words doesn't change its trend shape. Compare:
+
+```{r}
+tm_yearly_line_plot(.yearly_totals=m$yrly,topics=146)
+```
+
+and:
+
+```{r}
+w146 <- topic_top_words(146,m$wkf,n=30)
+print(w146)
+```
+
+```{r}
+mallet_word_plot(w146,tym_result$tym,tym_result$yseq,m$vocab,plot_total=T)
+```
+
+and:
+
+```{r}
+mallet_word_plot(w146[7:30],tym_result$tym,tym_result$yseq,m$vocab,plot_total=T)
+```
+
+I would guess the high-frequency words that are the topic's top words are actually not the anchors of the topics but have just been stuck in by the algorithm in order to reinforce the trend. As for what this topic is about, let's go ahead and ("bloom") call it the conservative fucks topic:
+
+```{r}
+cite_articles(m$metadata,top_documents(146,m$id_map,m$dtm,n=15)$id)
+```
+
+However, there are a few topics that are very prominent on the grid and also not easy to interpret:
+
+```{r}
+for(i in c(14,52,59,114)) {
+  print(topic_name(i,m$wkf,n=10))
+}
+```
+
+The overall grid is thus a little clearer if we zoom in on the y axis, losing the tops of the biggest topics:
+
+```{r}
+tj_p + ylim(0,0.2)
+```
+
+
+
+# exclude a journal from 1-gram picture
+
+```{r}
+tym_ci <- term_year_matrix_journal("Critical Inquiry\t",m$metadata,tdm,m$id_map,m$vocab)
+# check yseq's match: they should
+stopifnot(all(tym_result$yseq==tym_ci$yseq))
+tym_no_ci <- tym_result$tym - tym_ci$tym
+mallet_word_plot(c("criticism","critic","critics","critical"),tym_no_ci,tym_result$yseq,m$vocab,plot_total=T)
+```
+
+```{r}
+mallet_word_plot(c("criticism","critic","critics","critical"),tym_result$tym,tym_result$yseq,m$vocab,plot_total=T)
+```
+
+# break up topics into individual words over time
+
+```{r}
+topic <- 16
+filename <- sprintf("models/hls_k150_v100K/tytm/%03d.rda",topic)
+#tytm_result
+load(filename)
+words <- topic_top_words(topic,m$wkf,n=8)
+mallet_word_plot(words,tytm_result$tym,tytm_result$yseq,m$vocab,
+                 plot_freq=F,plot_total=F) + facet_wrap( ~ word)
+```
+
+
+# compare a word's overall frequency with its assignment to topics
+
+This overlays lines showing the time series of the occurrences of a word in the corpus with the number of occurrences of the word allocated to each of the topics.
+
+```{r}
+word_topic_breakdown <- function(words,geom="area",verbose=T) { 
+  # single word, but could tally up total for multiple words
+  show_total <- length(words) > 1
+  series_list <- vector("list",m$n)
+  series_keep <- logical(m$n)
+  cur <- 1
+  topic_labels <- character()
+  for(topic in 1:m$n) {
+    load(sprintf("models/hls_k150_v100K/tytm/%03d.rda",topic))
+    series <- term_year_series_frame(words,
+                                     tytm_result$tym,tytm_result$yseq,
+                                     m$vocab,
+                                     raw_counts=T,  # N.B. raw counts
+                                     total=show_total)
+    if(any(series$weight > 0)) {
+      if(verbose) {
+        message("Hits in series for topic",topic)
+      }
+      series$topic <- sprintf("%03d",topic)
+      series_list[[cur]] <- series
+      cur <- cur + 1
+    } # (if)
+  } # (for)
+  series_frame <- do.call(rbind,series_list)
+  series_plot <- mallet_word_plot(words,
+                                     tym_result$tym,tym_result$yseq,
+                                     m$vocab,
+                                     plot_freq=F,   # N.B. raw counts
+                                     plot_total=show_total)
+  if(geom=="line") {
+    result <- series_plot + geom_line(data=series_frame,
+                                      aes(group=topic,color=topic))
+  } else if(geom=="area") {
+    result <- series_plot + geom_area(data=series_frame,
+                                      aes(group=topic,fill=topic))
+  } else {
+    stop("I don't know what to do with the geom ",geom)
+  }
+  result
+}
+```
+
+Thinking about topic 16, take a look at:
+```{r}
+word_topic_breakdown("criticism")
+```
+
+And for 94:
+```{r}
+word_topic_breakdown("literary")
+```
+
+```{r}
+word_topic_breakdown("reading")
+```
+
+And for 20:
+```{r}
+word_topic_breakdown("interpretation")
+```
+
+If you look at the frequency over the whole corpus:
+```{r}
+mallet_word_plot("interpretation",tym_result$tym,tym_result$yseq,m$vocab,plot_freq=F)
+```
+you see a scary-looking spike in the 1890s. This is not as scary as might seem, since the frequency in the 1890s is relative to many fewer total words and articles. Still, it turns out that there is one article with an extraordinarily large count of "interpretation"s:
+
+```{r eval=F}
+# Get the whole term document matrix to go hunting in
+load("models/hls_k150_v100K/tdm.rda")
+w <- match("interpretation",m$vocab) # 3051
+c19ids <- m$metadata$id[pubdate_Date(m$metadata$pubdate) < as.Date("1900-01-01")]
+# In fact there is only one hit in c19 in the top 100:
+stopifnot(sum(m$id_map[order(tdm[w,],decreasing=T)[1:100]] %in% c19ids)==1)
+hit <- which(m$id_map[order(tdm[3051,],decreasing=T)[1:100]] %in% c19ids)
+hit_id <- (m$id_map[order(tdm[w,],decreasing=T)[1:100]])[hit]
+# the citation
+cite_articles(m$metadata,hit_id)
+# "J. Douglas Bruce, \"The Anglo-Saxon Version of the Book of Psalms Commonly 
+# Known as the Paris Psalter,\" *PMLA* 9, no. 1 (January 1894): 43-164."
+# the word count
+tdm[w,match(hit_id,m$id_map)] # 101
+```
+
+
+
+
