@@ -13,8 +13,8 @@ m$yrly <- tm_yearly_totals(tm_wide=m$dtw)
 m$dtm <- doc_topics_matrix(m$doctops)
 corpus_meta <- m$metadata[m$metadata$id %in% m$id_map,]
 m$n <- ncol(m$dtm)
-m$yrly_j <- tm_yearly_totals_meta(m$doctops,m$metadata,m$yrly,
-                                vars="journaltitle")
+# raw counts conditional on journal and year
+m$yrly_j <- tm_yearly_totals_meta(m$doctops,m$metadata,vars="journaltitle")
 ```
 
 ```{r tdm,eval=F}
@@ -33,7 +33,7 @@ length(unique(authors))
 
 # The literature topic
 ```{r}
-tm_yearly_line_plot(topics=94,raw_counts=F,.yearly_totals=m$yrly)
+tm_yearly_line_plot(topics=94,raw_counts=T,.yearly_totals=m$yrly)
 ```
 
 ```{r}
@@ -52,13 +52,29 @@ words <- setdiff(words,c("new","literary","history"))
 mallet_word_plot(words,tym_result$tym,tym_result$yseq,m$vocab,plot_total=T)
 ```
 
+```{r}
+tm_yearly_journals_plot(94,m$doctops,m$metadata,m$yrly)
+```
+
 And dropping the journal *NLH* from the topic count:
 
 ```{r}
-yrly_no_nlh <- subset(m$yrly_j,journaltitle != "New Literary History\t")
+yrly_without <- function(without) {
+    without_frame <- ddply(subset(m$yrly_j,!(journaltitle %in% without)),
+                    .(pubdate),function (d) {
+                        colSums(subset(d,select=-c(pubdate,journaltitle)))
+                    })
+    result <- t(as.matrix(subset(without_frame,select=-pubdate)))
+    colnames(result) <- without_frame$pubdate
+    rownames(result) <- rownames(m$yrly) # just steal "topic1","topic2"...
+    stopifnot(all(colnames(result)==colnames(m$yrly)))
+    result
+}
+
+
 tm_yearly_line_plot(topics=94,raw_counts=T,
-                    .yearly_totals=yrly_no_nlh,
-                    .yearly_overall=m$yrly)
+                    .yearly_totals=yrly_without("New Literary History\t"),
+                    .yearly_overall=colSums(m$yrly))
 ```
 
 # The criticism topic
