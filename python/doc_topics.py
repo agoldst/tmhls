@@ -12,20 +12,28 @@ from collections import defaultdict
 # doc_topics_frame() in R. N.B. that the results of this script have no
 # headers and no id column.
 
-def process_file(ss_file,n_topics):
+def process_file(ss_file,n_topics,id_file):
+    with open(id_file) as f:
+        ids = [line.strip() for line in f.readlines()]
 
     # utility function for accumulating our doc-topic tallies as we go
-    def output_tally(tally):
+    def output_tally(tally,doc_id):
         line = ""
-        for topic in range(n_topics):
-            line += str(tally[topic])
-            if topic + 1 != n_topics:
-                line += ","
+        for topic in xrange(n_topics):
+            line += str(tally[topic]) + ","
+        line += doc_id
         print line
 
     with open(ss_file) as f:
         doc_tally = defaultdict(int)
         last_doc = 0    # assume we start at doc 0
+
+        # header line
+        header = ""
+        for t in xrange(n_topics):
+            header += "topic" + str(t + 1) + ","
+        header += "id"
+        print header
 
         skipped_header = False
         for line in f:
@@ -41,7 +49,7 @@ def process_file(ss_file,n_topics):
             doc,wordtype,topic,count = [int(s) for s in line.split(",")]
 
             if last_doc != doc:
-                output_tally(doc_tally)
+                output_tally(doc_tally,ids[last_doc])
                 doc_tally = defaultdict(int)
 
             doc_tally[int(topic)] += int(count)
@@ -49,9 +57,9 @@ def process_file(ss_file,n_topics):
 
         # final doc: after end of for loop
         if len(doc_tally) > 0:
-            output_tally(doc_tally)
+            output_tally(doc_tally,ids[last_doc])
 
 
 if __name__=="__main__":
-    script,filename,n = sys.argv
-    process_file(filename,int(n))
+    script,filename,n,id_file = sys.argv
+    process_file(filename,int(n),id_file)
