@@ -19,21 +19,28 @@ for(m in file.path("models",to_fix)) {
     vfile <- file.path(m,"vocab.txt")
     stopifnot(file.exists(vfile))
 
-    out_file <- file.path(m,"wkf_reconstructed.csv")
+    out_file <- file.path(m,"wkf_fixed.csv")
     if(file.exists(out_file)) {
-        stop(paste(out_file,"already exists."))
+        message(out_file," already exists.")
+        response <- readline("Overwrite? (yes/no) > \n")
+        if(response != "yes") {
+            message("Skipping...")
+            next
+        }
     }
 
+    command <- "python python/fix_wkf.py"
+    command <- paste(command,twfile,kfile,vfile)
+    command <- paste(command,">",out_file)
+    message("Executing ",command)
 
-    wkf <- reconstruct_wkf(kfile,twfile,vfile)
-
-    write.table(wkf,
-              out_file,
-              quote=F,sep=",",
-              row.names=F,
-              col.names=T)
-    
-    message("Wrote ",out_file)
+    result <- system(command)
+    if(result != 0) {
+        message("Script run unsuccessful")
+    }
+    else {
+        message("Wrote ",out_file)
+    }
 }
 
 
