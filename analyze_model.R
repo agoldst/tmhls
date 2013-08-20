@@ -311,21 +311,3 @@ load_ss <- function(model_dir=".",
     ss
 }
 
-reconstruct_wkf <- function(bad_wkf_file,topic_words_file,vocab_file,
-                            n_top=NULL) {
-    bad_wkf <- read.csv(bad_wkf_file,as.is=T)
-    tw <- as.matrix(read.csv(topic_words_file,header=F,as.is=T))
-    vocab <- readLines(vocab_file)
-    n <- nrow(tw)
-
-    bad_n_top <- nrow(bad_wkf) / n
-
-    if(is.null(n_top)) {
-        n_top <- bad_n_top
-    }
-
-    alpha <- bad_wkf$alpha[seq.int(from=1,by=bad_n_top,length.out=n)]
-
-    wkf_new <- topic_words_wkf(tw,vocab,alpha,n_top)
-}
-
