@@ -10,7 +10,8 @@ to_fix <- c("AHRk150v105",
             "hls_k300_v12000",
             "hls_k48_v100K")
 
-for(m in file.path("model",to_fix)) {
+for(m in file.path("models",to_fix)) {
+    message("Working on ",m)
     kfile <- file.path(m,"keys.csv")
     stopifnot(file.exists(kfile))
     twfile <- file.path(m,"topic_words.csv")
@@ -23,8 +24,6 @@ for(m in file.path("model",to_fix)) {
         stop(paste(out_file,"already exists."))
     }
 
-
-    message("Working on ",to_fix)
 
     wkf <- reconstruct_wkf(kfile,twfile,vfile)
 
