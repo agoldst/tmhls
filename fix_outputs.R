@@ -46,6 +46,16 @@ for(m in file.path("models",to_fix)) {
         message("Done.")
     }
 
+    idfile <- file.path(m,"id_map.txt")
+    if(prompt_overwrite(idfile)) {
+        message("Generating ",idfile)
+        source("source_dfr_analysis.R")
+        insts <- read_instances(file.path(m,"journals.mallet"))
+        ids <- instances_ids(insts)
+        writeLines(ids,idfile)
+        message("Done")
+    }
+
 
     dtfile <- file.path(m,"doc_topics_fixed.csv")
     if(prompt_overwrite(dtfile)) {
@@ -53,9 +63,11 @@ for(m in file.path("models",to_fix)) {
         n_topics <- sub('_.*',"",n_topics)
         message("Generating ",dtfile)
         stopifnot(file.exists(ssfile))
+        stopifnot(file.exists(idfile))
         system(paste("python python/doc_topics.py",
                      ssfile,
                      n_topics,
+                     idfile,
                      ">",
                      dtfile))
         message("Done.")
