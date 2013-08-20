@@ -28,19 +28,37 @@ model_files <- function(model) {
     } else if(model=="ahr_k100_v20000") {
         model_dir <- "~/Documents/research/20c/hls/tmhls/models/ahr_k100_v20000/"
         list(model_dir=model_dir,
+             keys_file=file.path(model_dir,"wkf_fixed.csv"),
+             journal_dirs="AHR",
+             model_smoothed=F,
+             model_normalized=F)
+    } else if(model=="AHRk150v150") {
+        model_dir <- "~/Documents/research/20c/hls/tmhls/models/AHRk150v150/"
+        list(model_dir=model_dir,
+             keys_file=file.path(model_dir,"wkf_fixed.csv"),
              journal_dirs="AHR",
              model_smoothed=F,
              model_normalized=F)
     } else if(model=="hls_k100_v100000") {
+        message("Warning: doc_topics / keys will be off because of mallet bug")
         model_dir <- "~/Documents/research/20c/hls/tmhls/models/hls_k100_v100000/"
 
         list(model_dir=model_dir,
              doctops_file=gzfile(file.path(model_dir,"doc_topics.csv.gz")))
-    } else if(model=="hls_k200_v105") {
-        list(model_dir="~/Documents/research/20c/hls/tmhls/models/HLSk200v105/",
+    } else if(model=="hls_k200_v105_again") {
+        model_dir <- "~/Documents/research/20c/hls/tmhls/models/hls_k200_v105_again/",
+        list(model_dir=model_dir,
+             keys_file=file.path(model_dir,"wkf_fixed.csv"),
+             model_smoothed=F,
+             model_normalized=F)
+    } else if(model=="hls_k300_v12000") {
+        model_dir <- "~/Documents/research/20c/hls/tmhls/models/hls_k300_v12000/",
+        list(model_dir=model_dir,
+             keys_file=file.path(model_dir,"wkf_fixed.csv"),
              model_smoothed=F,
              model_normalized=F)
     } else if(model=="hls_k48_v100K") {
+        message("Warning: doc_topics / keys will be off because of mallet bug")
         list(model_dir="~/Documents/research/20c/hls/tmhls/models/hls_k48_v100K/",
              model_smoothed=T)
     } else if(model=="hls_k150_v100K") {
