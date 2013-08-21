@@ -32,8 +32,8 @@ model_files <- function(model) {
              journal_dirs="AHR",
              model_smoothed=F,
              model_normalized=F)
-    } else if(model=="AHRk150v150") {
-        model_dir <- "~/Documents/research/20c/hls/tmhls/models/AHRk150v150/"
+    } else if(model=="AHRk150v105") {
+        model_dir <- "~/Documents/research/20c/hls/tmhls/models/AHRk150v105/"
         list(model_dir=model_dir,
              keys_file=file.path(model_dir,"wkf_fixed.csv"),
              journal_dirs="AHR",
