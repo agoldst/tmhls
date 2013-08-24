@@ -183,7 +183,7 @@ top16_journals_p %+% subset(m$yrly_j,!(journaltitle %in%
 # The grid of all topics over the years
 
 Here's the overall grid, with journal breakdowns as well:
-```{r}
+```{r grid-journal-breakdown}
 yj_m <- melt(m$yrly_j)
 tj_p <- ggplot(yj_m,
                aes(x=as.Date(pubdate),
@@ -438,3 +438,194 @@ word_topic_breakdown("power",geom="line",plot_freq=T)
 word_topic_breakdown("power",geom="line")
 mallet_word_plot("power")
 ```
+
+
+# topics with proper names in (by hand)
+
+looking at `keys_summary.csv`, i.e. top 50 words
+
+004 hobbes
+005 voltaire, rousseau, etc
+006 shakespeare
+008 derrida, heidegger
+011 lope, quevedo, etc
+012 marston collier
+020 reading text reader ... woolf ... miller
+021 aristotle plato etc
+022 jonson marlowe middleton etc
+024 goethe schiller lessing
+026 black white ... faulkner ... baldwin ... bois
+028 hawthorne ... bloom ... finnegans
+032 donne chapman marvell
+034 piu tasso
+035 coleridge hazlitt
+037 knight romance ... malory ... chretien
+038 nature natural man world .... [near bottom] lucretius
+039 interpretation meaning text ... fish
+040 ship voyage captain island crusoe robinson marlow ... defoe 
+042 figure sterne picture
+043 game cervantes play
+045 spanish mas spain ... unamuno garcia
+046 pastoral arcadia ... drayton ...  (nb 'sidney' on stoplist)
+047 chaucer tale troilus
+049 american new america whitman ... twain ...
+051 french vv roman guillaume ... bertran ... troubadour
+054 political english england burke government
+055 bacon new knowledge society ... browne ...
+058 social work form own ideology ... marxism (nb 'marx' on stoplist)
+060 religious christian ... jesus ... bunyan
+061 piers plowman pearl ... langland
+063 faust faustus stein play ... marlowe ... wagner
+064 pope dryden english essay
+076 baudelaire suis moi mort
+077 human moral own world ... wittgenstein ... rorty
+078 plus montaigne rabelais french ronsard
+084 esthetic romantic ... nietzsche idea pater
+085 new rev university victorian ... browning
+088 film cinema films see image ... kane ... barthes
+089 greek epic classical ... ovid ... vergil (nb 'homer' on stoplist)
+091 eliot yeats pound new ruskin waste moore auden land lewes
+094 literary literature new work ...... frye
+096 poetry poet poetic poems poets poem ... dickinson ... frost ... crane
+097 paradise god lost satan ... miltonic ... (nb 'milton' on stoplist)
+099 animal animals ....... aesop
+101 skelton bishop gypsies
+102 feeling emotional moral pleasure .... smith
+103 italian italy boccaccio florence ... petrarch ...
+105 swift sublime essay gulliver ... locke ...
+106 wordsworth keats nature poet
+107 french paris france balzac proust
+108 violence trial crime memory ... shoah arendt 
+109 sexual feminist sex sexuality desire ... sappho ... sedgwick ... foucault
+110 philosophy science philosophical knowledge ... ortega
+111 dickens novel victorian ... thackeray
+113 sonnet sonnets petrarch form day
+115 tragedy play drama [.....aristotle way down]
+120 spanish portuguese...menendez
+122 chinese china japanese .... wang ... weil
+125 jewish jews hebrew ... said ... [wonder if Said gets a boost from "said"]
+129 russian soviet russia tolstoy bakhtin
+130 body medical hardy health [hardy is intrusive here among the "health" words]
+133 ms manuscript [....waaay down at bottom:] pepys
+134 spenser faerie book
+135 desire self freud
+136 poe dutch german ... ibsen ...
+137 stevens new wilde figure [actually a henry james topic, but henry and james are stopped out!]
+139 german germany mann kafka
+141 same rilke mir war mich
+146 own like toward ... [down around 20:] bloom
+147 fielding jones defoe
+148 irish scottish ... gray ... scots sir burns
+150 novel novels fiction ... miss austen
+
+
+...
+
+[131 play plays macbeth caesar ...]
+004 a genuinely surprising law topic, driven by NLH/CI
+
+# other novelties
+
+019 see new media
+036 economic money value
+069 world european national colonial cultural
+070 vnd daz man nit mir hat wol wolfram ... gottfried
+
+
+```{r}
+mallet_word_plot(c("men","women"),tym_result$tym,tym_result$yseq,m$vocab)
+```
+
+
+## note on 020 reading text reader ... woolf
+
+Hmm. Woolf has been wholly absorbed into 020 (because of "The Common *Reader*"?)
+
+```{r}
+topic_word_breakdown("woolf",plot_freq=T)
+```
+
+We can look more closely at the documents where Woolf is prominent to see if "reading" etc. are prominent too...
+
+```{r}
+tf_idf <- function(term,doc,tdm) {
+    idf <- log(ncol(tdm) / rowSums(tdm[term,,drop=F] != 0))
+    Diagonal(n=length(term),x=idf) %*% tdm[term,doc]
+}
+```
+
+term weightings for topic 20 top words in documents in which "woolf" occurs at all:
+```{r}
+# remember to load the tdm
+w20 <- m$wkf$word[m$wkf$topic==20][1:15]
+w20 <- w20[w20 != "woolf"]
+t_w20 <- match(w20,m$vocab)
+t_woolf <- match("woolf",m$vocab)
+tf_idf(c(t_woolf,t_w20),which(tdm[t_woolf,] != 0),tdm)
+```
+
+Or we could look at some association measures:
+```{r}
+x0 <- tdm[match("reader",m$vocab),]
+for(w in c("woolf","reading","text")) {
+    term <- match(w,m$vocab)
+    x1 <- tdm[term,]
+    print(w)
+    print(cor(x0,x1))
+    print((x0 %*% x1) / (sqrt(x0 %*% x0) * sqrt(x1 %*% x1)))
+}
+```
+
+```{r}
+words <- topic_top_words(20,m$wkf,n=8)
+mallet_word_plot(words,tym_result$tym,tym_result$yseq,m$vocab,plot_total=F) +
+    scale_color_brewer(palette="Set1")
+```
+
+Conclusion: "woolf" is positively associated with the top words in topic 20, but not at all closely
+
+
+# jameson
+
+```{r}
+jameson <- m$metadata$id[grepl("jameson",m$metadata$author,ignore.case=T)]
+# remove non-fredrics
+jameson <- jameson[jameson %in% with(m$metadata,id[grepl("fredric",author,ignore.case=T)])]
+# this also drops 
+# Wilhelm Dilthey and Frederic Jameson, \"The Rise of Hermeneutics,\" *New Literary History*
+# 3, no. 2 (January 1972): 229-244.
+sum(sapply(jameson,function(j) { 58 %in% order(m$doctops[m$doctops$id==j,1:150],decreasing=T)[1:3] }))
+```
+
+# topic 067 see inquiry particular form
+
+this is a fairly coherent "abstract debate over method" topic, which, like other theory topics, peaks ca. 1980 and then drops. Unfortunately "inquiry" is v. prominent in part because this is a *CI*-heavy topic:
+
+```{r}
+tm_yearly_journals_plot(67,m$doctops,m$metadata,.yrly_j=m$yrly_j)
+```
+
+Still:
+
+```{r}
+tm_yearly_line_plot(topics=67,raw_counts=T,
+                    .yearly_totals=yrly_without("Critical Inquiry\t"),
+                    .yearly_overall=colSums(m$yrly))
+```
+
+picks out a similar peak.
+
+# recents
+
+Hand-coding recent risers:
+
+```{r depends="grid-journal-breakdown"}
+recents <- c(015,143,138,058,019,025,048,069,036,004,108,077,102)             
+yj_m_recent <- subset(yj_m,variable %in% paste("topic",recents,sep=""))
+ggplot(yj_m_recent,aes(x=as.Date(pubdate),y=value,
+                       group=journaltitle,
+                       fill=journaltitle)) +
+   geom_area() + facet_wrap(~ variable,nrow=4)
+```
+
+
