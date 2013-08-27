@@ -12,7 +12,7 @@ m$dtw <- merge(m$doctops,m$metadata[,c("id","pubdate")],by="id")
 m$yrly <- tm_yearly_totals(tm_wide=m$dtw)
 m$dtm <- doc_topics_matrix(m$doctops)
 corpus_meta <- m$metadata[m$metadata$id %in% m$id_map,]
-m$n <- ncol(m$dtm)
+m$n <- length(unique(m$wkf$topic))
 # raw counts conditional on journal and year
 m$yrly_j <- tm_yearly_totals_meta(m$doctops,m$metadata,vars="journaltitle")
 ```
@@ -628,4 +628,56 @@ ggplot(yj_m_recent,aes(x=as.Date(pubdate),y=value,
    geom_area() + facet_wrap(~ variable,nrow=4)
 ```
 
+# alternate labeling strategies
 
+## Blei and Lafferty's scoring
+
+```{r blei_wkf,eval=F}
+m$b <- read.csv("models/hls_k150_v100K/params.csv")$beta
+m$tw <- read_topic_words_matrix("models/hls_k150_v100K/topic_words.csv")
+m$scores <- topic_word_scores(m$tw,m$b)
+m$a <- m$wkf$alpha[match(1:m$n,m$wkf$topic)]
+m$wkf_blei <- topic_words_wkf(m$scores,m$vocab,m$a,n_top=nrow(m$wkf) / m$n)
+```
+
+## correlations
+
+```{r}
+# just a wrapper for cor on corresponding rows of 2 matrices
+word_topic_cor <- function (n,m1,m2) {
+    suppressWarnings(cor(m1[n,],m2[n,]))
+}
+
+# make sure tym is loaded first.
+top_corr_words <- function(topic,n) {
+    load(sprintf("models/hls_k150_v100K/tytm/%03d.rda",topic))
+    words <- match(m$wkf$word[m$wkf$topic==topic],m$vocab)
+    tym_m <- as.matrix(tym_result$tym)
+    tytm_m <- as.matrix(tytm_result$tym)
+    wtcs <- sapply(words,word_topic_cor,
+                   m1=tym_m,m2=tytm_m)
+    o <- order(wtcs,decreasing=T)[1:n]
+    data.frame(topic=topic,word=m$vocab[words[o]],r=wtcs[o])
+}
+
+make_label_frame <- function(n_words=10) {
+  lst <- vector("list",m$n)
+  for(i in seq(m$n)) {
+      message("Working on topic ",i)
+      lst[[i]] <- top_corr_words(i,n_words)
+  }
+  do.call(rbind,lst)
+}
+```
+
+```{r}
+n_label_words <- 10
+lfrm <- make_label_frame(n_label_words)
+write.csv(lfrm,"models/hls_k150_v100K/tytm_corr_labels.csv",quote=F)
+labelings <- sapply(seq(m$n) - 1,function(i) {
+                    paste(lfrm$word[i * n_label_words + seq(n_label_words)],
+                          collapse=" ")
+                   })
+labelings <- paste(sprintf("%03d",seq(m$n)),labelings)
+writeLines(labelings,"models/hls_k150_v100K/tytm_corr_labels.txt")
+```
