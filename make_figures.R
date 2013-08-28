@@ -17,7 +17,7 @@ render_plot <- function(p,filename,fig_dir="essay/figure",
     message("Saved ",filename," in ",fig_dir)
 }
 
-fig_criticism <- function(filename) {
+fig_criticism <- function(filename="criticism.pdf",fig_dir="essay/figure") {
     message("[fig:criticism]")
 
     p <- tm_yearly_line_plot(.yearly_totals=m$yrly,topics=16,raw_counts=T)
@@ -27,8 +27,50 @@ fig_criticism <- function(filename) {
         theme(axis.title.x=element_text("article publication year"))
     
     p <- p + plot_theme
-    render_plot(p,"criticism.pdf")
+    render_plot(p,filename,fig_dir)
 }
+
+fig_formalism_waves <- function(filename="formalism-waves.pdf",
+                                fig_dir="essay/figure") {
+    message("[fig:formalism-waves]")
+
+    topics <- c(17,29,53)
+    to.plot <- topic_proportions_series_frame(
+        yearly=m$yrly,
+        topics=topics,
+        denominator=NULL,
+        rolling_window=3)
+
+    # TODO smoothing glitch?
+    # TU's original manual smoothing looks like:
+    # ntf = array(data= 0, dim = dim(NormalizedTopicFreqs))
+    # for (i in 1:150) {
+    #   ntf[i,] = smooth(NormalizedTopicFreqs[i, ] * 100, twiceit = TRUE)
+    # }
+    
+
+    to.plot$topic <- as.character(to.plot$topic)
+    to.plot$topic <- factor(to.plot$topic,levels=c("53","29","17"))
+
+    chromatic <- c("gray20", "gray40", "gray65")
+    
+    p <- ggplot(to.plot,aes(year,weight,fill=topic,group=topic)) +
+        geom_area()
+    p <- p +
+        scale_fill_manual(values=chromatic) +
+        scale_colour_manual(values=chromatic)
+    p <- p +
+        scale_y_continuous(labels=percent_format()) +
+        ggtitle("") +
+        theme(axis.title.x=element_text("article publication year"))
+
+    # TODO topic labels on plot body
+
+    p <- p + plot_theme
+    render_plot(p,filename,fig_dir)
+
+}
+
 
 # load data
 setwd("~/Documents/research/20c/hls/tmhls")
@@ -43,4 +85,4 @@ m$dtm <- doc_topics_matrix(m$doctops)
 m$n <- length(unique(m$wkf$topic))
 
 fig_criticism()
-
+fig_formalism_waves()
