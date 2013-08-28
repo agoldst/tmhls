@@ -1,7 +1,7 @@
 
 # global variables
 
-# ggplot theme
+# ggplot theming
 
 plot_theme <- theme_bw(base_size=10,base_family="serif")
 
@@ -27,12 +27,11 @@ fig_criticism <- function(filename="criticism.pdf",fig_dir="essay/figure") {
     message("[fig:criticism]")
 
     p <- tm_yearly_line_plot(.yearly_totals=m$yrly,topics=16,raw_counts=T)
-    p <- p +
+    p <- p + 
         scale_y_continuous(labels=percent_format()) +
-        ggtitle("") +
         theme(axis.title.x=element_text("article publication year"))
     
-    p <- p + plot_theme
+    p <- p + plot_theme + ggtitle("")
     render_plot(p,filename,fig_dir)
     
     p
@@ -71,12 +70,46 @@ fig_formalism_waves <- function(filename="formalism-waves.pdf",
         scale_colour_manual(values=chromatic)
     p <- p +
         scale_y_continuous(labels=percent_format()) +
-        ggtitle("") +
         theme(axis.title.x=element_text("article publication year"))
 
     # TODO topic labels on plot body
 
-    p <- p + plot_theme
+    p <- p + plot_theme + ggtitle("")
+    render_plot(p,filename,fig_dir)
+
+    p
+}
+
+fig_recent <- function(filename="recent.pdf",fig_dir="essay/figure") {
+    recents <- c(015,143,138,058)
+
+
+    to.plot <- topic_proportions_series_frame(
+        yearly=m$yrly,
+        topics=recents,
+        denominator=NULL,
+        rolling_window=3)
+
+    to.plot$topic <- factor(to.plot$topic,
+                            levels=recents)
+    levels(to.plot$topic) <- topic_names(m$wkf,n=4,topics=recents)
+
+    p <- ggplot(to.plot,aes(year,weight)) +
+        geom_line() +
+        facet_wrap(~ topic,nrow=1)
+
+    # TODO factor labels on plot body, not in tiny title bars
+
+    p <- p +
+        scale_y_continuous(labels=percent_format()) +
+        theme(axis.title.x=element_text("article publication year"))
+    p <- p + plot_theme + ggtitle("")
+
+    # TODO rest of recents all together on another grid panel?
+                #010)
+                 #019,025,048,069,036,
+                 #004,108,077,102)             
+
     render_plot(p,filename,fig_dir)
 
     p
@@ -96,4 +129,4 @@ m$n <- length(unique(m$wkf$topic))
 
 fig_criticism()
 fig_formalism_waves()
-
+fig_recent()
