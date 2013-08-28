@@ -6,24 +6,37 @@
 #
 # labels.txt should have lines of the form
 #
-# NN word1 word2 word3 ...
+# k,alpha,word1 word2 word3 ...
 # 
-# where NN is the number of the topic
+# where k is the number of the topic.
+#
+# The result is the source for a command \topiclabel{k} which expands to
+#
+# \topicformat{k}{word1 word2 ... word_n}
+#
+# \topicformat{}{} itself is defined in essay.tex
 
 def main(script,lfile,n="3"):
-    n_words = int(3)
+    n_words = int(n)
     print r'''
-\def\topiclabel#1{
+\def\topiclabel#1{%
     \ifcase#1
-        no topic zero'''
+\textbf{no topic zero}'''
     with open(lfile) as f: 
         for line in f:
-            fields = line.strip().split(' ')
-            print r'\or'
-            label = " ".join(fields[1:n_words + 1])
-            print r'\topicformat{' + fields[0] + "}{" + label + "}"
+            topic,alpha,long_label = line.strip().split(',')
+
+            # an easy way to ignore a header line, if present
+            if not topic.isdigit():
+                continue
+
+            print r'    \or'
+            # skip alpha
+            label = " ".join(long_label.split(" ")[0:n_words])
+            print r'\topicformat{' + topic + "}{" + label + "}%"
         
-    print r'\fi }'
+    print r'''    \fi%
+}'''
 
 if __name__=='__main__':
     import sys
