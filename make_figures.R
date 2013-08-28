@@ -49,7 +49,7 @@ fig_formalism_waves <- function(filename="formalism-waves.pdf",
         denominator=NULL,
         rolling_window=3)
 
-    # TODO smoothing glitch?
+    # TODO rolling average smoothing okay?
     # TU's original manual smoothing looks like:
     # ntf = array(data= 0, dim = dim(NormalizedTopicFreqs))
     # for (i in 1:150) {
@@ -57,13 +57,14 @@ fig_formalism_waves <- function(filename="formalism-waves.pdf",
     # }
     
 
-    to.plot$topic <- factor(to.plot$topic,levels=c("53","29","17"))
+    to.plot$topic <- factor(to.plot$topic)
 
-    # TODO fix refusal of ggplot to change stacking order
 
     chromatic <- c("gray20", "gray40", "gray65")
     
-    p <- ggplot(to.plot,aes(year,weight,fill=topic,group=topic)) +
+    # TODO order=rev(topic) is voodoo that only happens to work in this case
+    p <- ggplot(to.plot,aes(year,weight,fill=topic,group=topic,
+                            order=rev(topic))) +
          geom_area()
     p <- p +
         scale_fill_manual(values=chromatic) +
