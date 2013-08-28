@@ -1,7 +1,13 @@
 
-# ggplot theming: global variables
+# global variables
+
+# ggplot theme
 
 plot_theme <- theme_bw(base_size=10,base_family="serif")
+
+# model object (initialized with make_figures())
+
+m <- list()
 
 # p: plot object
 
@@ -28,6 +34,8 @@ fig_criticism <- function(filename="criticism.pdf",fig_dir="essay/figure") {
     
     p <- p + plot_theme
     render_plot(p,filename,fig_dir)
+    
+    p
 }
 
 fig_formalism_waves <- function(filename="formalism-waves.pdf",
@@ -49,13 +57,14 @@ fig_formalism_waves <- function(filename="formalism-waves.pdf",
     # }
     
 
-    to.plot$topic <- as.character(to.plot$topic)
     to.plot$topic <- factor(to.plot$topic,levels=c("53","29","17"))
+
+    # TODO fix refusal of ggplot to change stacking order
 
     chromatic <- c("gray20", "gray40", "gray65")
     
     p <- ggplot(to.plot,aes(year,weight,fill=topic,group=topic)) +
-        geom_area()
+         geom_area()
     p <- p +
         scale_fill_manual(values=chromatic) +
         scale_colour_manual(values=chromatic)
@@ -69,8 +78,8 @@ fig_formalism_waves <- function(filename="formalism-waves.pdf",
     p <- p + plot_theme
     render_plot(p,filename,fig_dir)
 
+    p
 }
-
 
 # load data
 setwd("~/Documents/research/20c/hls/tmhls")
@@ -86,3 +95,4 @@ m$n <- length(unique(m$wkf$topic))
 
 fig_criticism()
 fig_formalism_waves()
+
