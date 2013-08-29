@@ -3,7 +3,7 @@ library(ggplot2)
 # global variables
 # ----------------
 
-LOAD_MODEL <- F
+LOAD_MODEL <- T
 RENDER_PLOTS <- T
 
 # model object (initialized with make_figures()) 
