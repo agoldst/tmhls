@@ -47,14 +47,9 @@ render_plot <- function(p,filename,fig_dir="essay/figure",
     message("Saved ",filename," in ",fig_dir)
 }
 
-# specific figures...
-
-
-fig_criticism <- function(filename="criticism.pdf",fig_dir="essay/figure") {
-    message("[fig:criticism]")
-
+single_topic_plot <- function(topic,filename,fig_dir,w=5,h=3) {
     to_plot <- topic_proportions_series_frame(yearly=m$topic_year,
-                                              topics=16,
+                                              topics=topic,
                                               denominator=NULL,
                                               rolling_window=1)
     p <- ggplot(to_plot,aes(year,weight))
@@ -67,6 +62,15 @@ fig_criticism <- function(filename="criticism.pdf",fig_dir="essay/figure") {
     render_plot(p,filename,fig_dir)
     
     p
+}
+
+# specific figures...
+
+
+fig_criticism <- function(filename="criticism.pdf",fig_dir="essay/figure") {
+    message("[fig:criticism]")
+
+    single_topic_plot(16,filename,fig_dir)
 }
 
 fig_formalism_waves <- function(filename="formalism-waves.pdf",
@@ -205,7 +209,11 @@ fig_numbers <- function(filename="numbers.pdf",fig_dir="essay/figure") {
     p
 }
 
+fig_t080 <- function (filename="t080.pdf",fig_dir="essay/figure") {
+    message("[fig:t080]")
 
+    single_topic_plot(80,filename,fig_dir)
+}
 
 
 
@@ -234,9 +242,13 @@ make_figures_setup <- function() {
 }
 
 render_all <- function () {
+    fig_numbers()
     fig_criticism()
     fig_formalism_waves()
     fig_recent()
+    fig_t080()
+
+    return()
 }
 
 # main program
