@@ -13,6 +13,8 @@ add_year_proportion_axes <- function(p) {
         ylab("proportion of words in corpus")
 }
 
+our_geom_smooth <- geom_smooth(method="loess",span=0.5,color="black",se=F)
+
 # functions
 # ---------
 
@@ -51,7 +53,15 @@ render_plot <- function(p,filename,fig_dir="essay/figure",
 fig_criticism <- function(filename="criticism.pdf",fig_dir="essay/figure") {
     message("[fig:criticism]")
 
-    p <- tm_yearly_line_plot(.yearly_totals=m$yrly,topics=16,raw_counts=T)
+    to_plot <- topic_proportions_series_frame(yearly=m$topic_year,
+                                              topics=16,
+                                              denominator=NULL,
+                                              rolling_window=1)
+    p <- ggplot(to_plot,aes(year,weight))
+    p <- p +
+        geom_line(alpha=I(0.3)) +
+        our_geom_smooth
+
     p <- add_year_proportion_axes(p)    
     p <- p + plot_theme + ggtitle("")
     render_plot(p,filename,fig_dir)
@@ -65,7 +75,7 @@ fig_formalism_waves <- function(filename="formalism-waves.pdf",
 
     topics <- c(17,29,53)
     to.plot <- topic_proportions_series_frame(
-        yearly=m$yrly,
+        yearly=m$topic_year,
         topics=topics,
         denominator=NULL,
         rolling_window=3)
@@ -115,7 +125,7 @@ fig_recent <- function(filename="recent.pdf",fig_dir="essay/figure") {
     for(i in 1:2) {
         topics <- tlist[[i]]
         to_plot <- topic_proportions_series_frame(
-            yearly=m$yrly,
+            yearly=m$topic_year,
             topics=topics,
             denominator=NULL,
             rolling_window=roll)
@@ -124,8 +134,9 @@ fig_recent <- function(filename="recent.pdf",fig_dir="essay/figure") {
         levels(to_plot$topic) <- topic_name_fig(topics)
 
         # NB free scale on y axis
-        p[[i]] <- ggplot(to_plot) +
-            geom_line(aes(year,weight)) +
+        p[[i]] <- ggplot(to_plot,aes(year,weight)) +
+            geom_line(alpha=I(0.3)) +
+            our_geom_smooth +
             facet_wrap(~ topic,ncol=1,scales="free_y")
 
         p[[i]] <- add_year_proportion_axes(p[[i]]) +
@@ -175,7 +186,7 @@ fig_numbers <- function(filename="numbers.pdf",fig_dir="essay/figure") {
 
     p <- ggplot(to_plot,aes(year,weight)) +
         geom_line(alpha=I(0.3)) +
-        geom_smooth(se=F,method="loess",span=0.5,color="black")
+        our_geom_smooth
 
     # TU's original plot looks like
     #
@@ -210,7 +221,7 @@ make_figures_setup <- function() {
     source("analyze_model.R")
     m <- do.call(analyze_model,model_files("hls_k150_v100K"))
     m$dtw <- merge(m$doctops,m$metadata[,c("id","pubdate")],by="id")
-    m$yrly <- tm_yearly_totals(tm_wide=m$dtw)
+    m$topic_year <- tm_yearly_totals(tm_wide=m$dtw)
     m$dtm <- doc_topics_matrix(m$doctops)
     m$n <- length(unique(m$wkf$topic))
 
