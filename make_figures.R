@@ -6,6 +6,13 @@ library(ggplot2)
 # ggplot theming 
 plot_theme <- theme_bw(base_size=10,base_family="sans") 
 
+add_year_proportion_axes <- function(p) {
+    p + xlim(as.Date("1895-01-01"),as.Date("2005-01-01")) +
+        scale_y_continuous(labels=percent_format()) +
+        xlab("article publication year") +
+        ylab("proportion of words in corpus")
+}
+
 # functions
 # ---------
 
@@ -45,10 +52,7 @@ fig_criticism <- function(filename="criticism.pdf",fig_dir="essay/figure") {
     message("[fig:criticism]")
 
     p <- tm_yearly_line_plot(.yearly_totals=m$yrly,topics=16,raw_counts=T)
-    p <- p + 
-        scale_y_continuous(labels=percent_format()) +
-        xlab("article publication year")
-    
+    p <- add_year_proportion_axes(p)    
     p <- p + plot_theme + ggtitle("")
     render_plot(p,filename,fig_dir)
     
@@ -86,9 +90,7 @@ fig_formalism_waves <- function(filename="formalism-waves.pdf",
     p <- p +
         scale_fill_manual(values=chromatic) +
         scale_colour_manual(values=chromatic)
-    p <- p +
-        scale_y_continuous(labels=percent_format()) +
-        xlab("article publication year")
+    p <- add_year_proportion_axes(p)
 
     # TODO topic labels on plot body
 
@@ -126,10 +128,7 @@ fig_recent <- function(filename="recent.pdf",fig_dir="essay/figure") {
             geom_line(aes(year,weight)) +
             facet_wrap(~ topic,ncol=1,scales="free_y")
 
-        p[[i]] <- p[[i]] +
-            scale_y_continuous(labels=percent_format()) +
-            xlab("article year") +
-            ylab(ifelse(i==1,"proportion of words in topic","")) +
+        p[[i]] <- add_year_proportion_axes(p[[i]]) +
             theme(axis.text=element_text(size=9),
                   strip.text=element_text(size=9)) +
             plot_theme + ggtitle("")
@@ -186,10 +185,7 @@ fig_numbers <- function(filename="numbers.pdf",fig_dir="essay/figure") {
     # aggressively smooth than loess.
 
 
-    p <- p +
-        scale_y_continuous(labels=percent_format()) +
-        xlab("year") +
-        ylab("total proportion of corpus") +
+    p <- add_year_proportion_axes(p) +
         ggtitle("") +
         plot_theme
 
