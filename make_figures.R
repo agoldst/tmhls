@@ -1,16 +1,7 @@
 library(ggplot2)
 
-# global variables
+# global variables: plot_theme, m (initialized below)
 # ----------------
-
-LOAD_MODEL <- T
-RENDER_PLOTS <- T
-
-# model object (initialized with make_figures()) 
-if(LOAD_MODEL) {
-    m <- list()
-}
-
 
 # ggplot theming 
 plot_theme <- theme_bw(base_size=10,base_family="sans") 
@@ -162,27 +153,97 @@ fig_recent <- function(filename="recent.pdf",fig_dir="essay/figure") {
     p
 }
 
+fig_numbers <- function(filename="numbers.pdf",fig_dir="essay/figure") {
+    message("[fig:numbers]")
+
+    cardinals <- c("one", "two", "three", "four", "five", "six", "seven",
+                   "eight", "nine", "ten", "eleven", "twelve", "thirteen",
+                   "fourteen", "fifteen", "sixteen", "seventeen", "eighteen",
+                   "nineteen", "twenty", "thirty", "forty", "fifty", "sixty",
+                   "seventy", "eighty", "ninety", "hundred")
+    ordinals <-  c("first", "second", "third", "fourth", "fifth", "sixth",
+                   "seventh", "eighth", "ninth", "tenth")
+
+    numbers <- c(cardinals,ordinals)
+
+    # NB in stripped corpus, "one" is a stopword
+    to_plot <- term_year_series_frame(numbers,
+                                      term_year=m$term_year,
+                                      year_seq=m$term_year_yseq,
+                                      vocab=m$vocab,
+                                      raw_counts=F, # take yearly proportions
+                                      total=T) # F?
+
+    p <- ggplot(to_plot,aes(year,weight)) +
+        geom_line(alpha=I(0.3)) +
+        geom_smooth(se=F,method="loess",span=0.5,color="black")
+
+    # TU's original plot looks like
+    #
+    # p <- qplot(yearsequence, numbertrajectory * 100, geom = c("point", "smooth"), span = 0.5, ylab = "percentage of corpus", xlab = "", main = "cardinal and ordinal number words, one through a hundred")
+    #
+    # I have swapped lines for points. Rolling averages would be less 
+    # aggressively smooth than loess.
+
+
+    p <- p +
+        scale_y_continuous(labels=percent_format()) +
+        xlab("year") +
+        ylab("total proportion of corpus") +
+        ggtitle("") +
+        plot_theme
+
+    render_plot(p,filename,fig_dir)
+
+    p
+}
+
+
+
+
+
+
+    
+
+# setup and execution
+# -------------------
 make_figures_setup <- function() {
     # load data
     setwd("~/Documents/research/20c/hls/tmhls")
     library(Matrix)
     source("analyze_model.R")
     m <- do.call(analyze_model,model_files("hls_k150_v100K"))
-    # tym_result:
-    load("models/hls_k150_v100K/tym.rda")
     m$dtw <- merge(m$doctops,m$metadata[,c("id","pubdate")],by="id")
     m$yrly <- tm_yearly_totals(tm_wide=m$dtw)
     m$dtm <- doc_topics_matrix(m$doctops)
     m$n <- length(unique(m$wkf$topic))
+
+    # tym_result:
+    load("models/hls_k150_v100K/tym.rda")
+    m$term_year <- tym_result$tym
+    m$term_year_yseq <- tym_result$yseq
+
     m
 }
 
-if(LOAD_MODEL) {
-    m <- make_figures_setup()
-}
-
-if(RENDER_PLOTS) {
+render_all <- function () {
     fig_criticism()
     fig_formalism_waves()
     fig_recent()
+}
+
+# main program
+# model object (initialized with make_figures()) 
+if(!exists("m")) {
+    message("No 'm' found; initializing...")
+    m <- make_figures_setup()
+}
+
+# only save all plots if this flag is set
+# I liked R better when it was C
+
+if(exists("MAKE_FIGURES_RENDER_ALL") && MAKE_FIGURES_RENDER_ALL) {
+    render_all()
+} else {
+    message("No plots rendered; call fig_* or render_all()")
 }
