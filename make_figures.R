@@ -6,11 +6,14 @@ library(ggplot2)
 # ggplot theming 
 plot_theme <- theme_bw(base_size=10,base_family="sans") 
 
-add_year_proportion_axes <- function(p) {
+add_year_proportion_axes <- function(p,
+        xlabel="article publication year",
+        ylabel="proportion of words in corpus",
+        yscale=scale_y_continuous(labels=percent_format())) {
     p + xlim(as.Date("1895-01-01"),as.Date("2005-01-01")) +
-        scale_y_continuous(labels=percent_format()) +
-        xlab("article publication year") +
-        ylab("proportion of words in corpus")
+        yscale +
+        xlab(xlabel) +
+        ylab(ylabel)
 }
 
 our_geom_smooth <- geom_smooth(method="loess",span=0.5,color="black",se=F)
@@ -72,7 +75,64 @@ single_topic_plot <- function(topic,filename,fig_dir,w=5,h=3) {
 fig_criticism <- function(filename="criticism.pdf",fig_dir="essay/figure") {
     message("[fig:criticism]")
 
-    single_topic_plot(16,filename,fig_dir)
+    to_plot <- list()
+    to_plot[[1]] <- topic_proportions_series_frame(
+        yearly=m$topic_year,
+        topics=16,
+        denominator=NULL,
+        rolling_window=1)
+    to_plot[[2]] <- term_year_series_frame("criticism",
+        term_year=m$term_year,
+        year_seq=m$term_year_yseq,
+        vocab=m$vocab,
+        raw_counts=F) # take yearly proportions
+
+    render_plot(to_plot,filename,fig_dir,
+                w=5,h=3, # TODO figure dimensions
+                render_function=function(to_plot) {
+        grid.newpage()
+        pushViewport(viewport(layout=grid.layout(2,1,heights=c(2,1))))
+
+
+        plot_labels <- c("topic 16","the word \"criticism\"")
+        plot_rows <- list(c(1,2),3)
+        for(i in 1:2) {
+
+            p <- ggplot(to_plot[[i]],aes(year,weight)) +
+                time_series_geom +
+                our_geom_smooth
+
+            p <- p +
+                annotate(geom="text",
+                         size=rel(3),   # nasty suspicion this is relative to
+                                        # the size of the bars
+                         hjust=0,
+                         label=plot_labels[i],
+                         x=as.Date("1895-01-01"),
+                         y=0.95 * max(to_plot[[i]]$weight))
+
+            # TODO better axis/label placement
+
+            if(i == 1) {
+                p <- add_year_proportion_axes(p,
+                                              xlabel="")
+            }
+            if(i == 2) {
+                p <- add_year_proportion_axes(p,ylabel="",
+                    yscale=scale_y_continuous(limits=c(0,0.0015),
+                                              labels=percent_format()))
+            }
+
+
+            p <- p + plot_theme
+
+            print(p,
+                  vp=viewport(layout.pos.row=i,
+                              layout.pos.col=1))
+
+        }
+    })
+
 }
 
 fig_formalism_waves <- function(filename="formalism-waves.pdf",
