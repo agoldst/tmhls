@@ -14,6 +14,8 @@ add_year_proportion_axes <- function(p) {
 }
 
 our_geom_smooth <- geom_smooth(method="loess",span=0.5,color="black",se=F)
+time_series_geom <-
+        geom_bar(stat="identity",fill="grey80",width=90)
 
 # functions
 # ---------
@@ -54,7 +56,7 @@ single_topic_plot <- function(topic,filename,fig_dir,w=5,h=3) {
                                               rolling_window=1)
     p <- ggplot(to_plot,aes(year,weight))
     p <- p +
-        geom_line(alpha=I(0.3)) +
+        time_series_geom +
         our_geom_smooth
 
     p <- add_year_proportion_axes(p)    
@@ -139,7 +141,7 @@ fig_recent <- function(filename="recent.pdf",fig_dir="essay/figure") {
 
         # NB free scale on y axis
         p[[i]] <- ggplot(to_plot,aes(year,weight)) +
-            geom_line(alpha=I(0.3)) +
+            time_series_geom +
             our_geom_smooth +
             facet_wrap(~ topic,ncol=1,scales="free_y")
 
@@ -189,7 +191,7 @@ fig_numbers <- function(filename="numbers.pdf",fig_dir="essay/figure") {
                                       total=T) # F?
 
     p <- ggplot(to_plot,aes(year,weight)) +
-        geom_line(alpha=I(0.3)) +
+        time_series_geom +
         our_geom_smooth
 
     # TU's original plot looks like
