@@ -335,6 +335,7 @@ render_all <- function () {
     fig_formalism_waves()
     fig_recent()
     fig_t080()
+    fig_theory()
 
     return()
 }
