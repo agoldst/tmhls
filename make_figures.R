@@ -278,6 +278,32 @@ fig_t080 <- function (filename="t080.pdf",fig_dir="essay/figure") {
 }
 
 
+fig_theory <- function(filename="theory.pdf",fig_dir="essay/figure") {
+    message("[fig:theory]")
+
+    topics <- c(94,20,39,143)
+    to_plot <- topic_proportions_series_frame(
+        yearly=m$topic_year,
+        topics=topics,
+        denominator=NULL,
+        rolling_window=1)
+
+    to_plot$topic <- factor(to_plot$topic,levels=topics)
+    levels(to_plot$topic) <- topic_name_fig(topics)
+
+    # NB free scale on y axis
+    p <- ggplot(to_plot,aes(year,weight)) +
+        time_series_geom +
+        our_geom_smooth +
+        facet_wrap(~ topic,ncol=1,scales="free_y")
+
+    p <- add_year_proportion_axes(p) +
+            theme(axis.text=element_text(size=9),
+                  strip.text=element_text(size=9)) +
+            plot_theme + ggtitle("")
+
+    render_plot(p,filename,fig_dir)
+}
 
 
     
