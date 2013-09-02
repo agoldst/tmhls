@@ -29,7 +29,7 @@ our_point_geom <- geom_point(alpha=I(0.25),size=1)
 
 # specific figures...
 
-pdf("analyses/time_plotting.pdf",w=6,h=4)
+pdf("explore/time_plotting.pdf",w=6,h=4)
 
 print(p + geom_line() +
     ggtitle("line plot")
@@ -81,6 +81,18 @@ print(p + geom_bar(stat="identity",fill="grey80",width=90) +
     ggtitle("thinner bars")
 )
 
+print(p + geom_bar(stat="identity",fill="grey80",width=90) +
+    geom_smooth(method="loess",span=0.5,color="black",se=T) +
+    ggtitle("thinner bars + se")
+)
+
+print(p + geom_bar(stat="identity",fill="grey80",width=90) +
+    stat_smooth(method="loess",span=0.5,color="black",
+                geom="ribbon",fill="NA",linetype=3) +
+    stat_smooth(method="loess",span=0.5,color="black",se=F) +
+    ggtitle("thinner bars + se edges only")
+)
+
 print(p + our_point_geom +
     geom_smooth(method="loess",span=0.1,se=F,alpha=I(0.5)) + 
     ggtitle("span=0.1")
@@ -103,8 +115,12 @@ print(p + our_point_geom +
 
 print(p + our_point_geom +
     geom_smooth(method="loess",span=0.5,degree=1,se=F) +
-    geom_smooth(method="loess",span=0.5,degree=2,se=F,color="purple") +
-    ggtitle("smoothing parameters: degree (purple=2)")
+    ggtitle("degree=1")
+)
+
+print(p + our_point_geom +
+    geom_smooth(method="loess",span=0.5,degree=2,se=F) +
+    ggtitle("degree=2")
 )
 
 for(i in 1:5) {
