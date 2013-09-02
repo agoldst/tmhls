@@ -31,6 +31,77 @@ our_point_geom <- geom_point(alpha=I(0.25),size=1)
 
 pdf("explore/time_plotting.pdf",w=6,h=4)
 
+print(p + geom_bar(stat="identity",fill="grey80") +
+    geom_smooth(method="loess",span=0.5,color="black",se=F) +
+    ggtitle("bars")
+)
+
+print(p + geom_bar(stat="identity",
+                   fill="white",color="grey80",size=0.25) +
+    geom_smooth(method="loess",span=0.5,color="black",se=F) +
+    ggtitle("hollow bars")
+)
+
+# width in days (x-axis scale)
+print(p + geom_bar(stat="identity",fill="grey80",width=90) +
+    geom_smooth(method="loess",span=0.5,color="black",se=F) +
+    ggtitle("thinner bars")
+)
+
+print(p + geom_bar(stat="identity",fill="grey80",width=90) +
+    geom_smooth(method="loess",span=0.5,color="black",se=T) +
+    ggtitle("thinner bars + se")
+)
+
+print(p + geom_bar(stat="identity",fill="grey80",width=90) +
+    stat_smooth(method="loess",span=0.5,color="black",
+                geom="ribbon",fill="NA",linetype=3) +
+    stat_smooth(method="loess",span=0.5,color="black",se=F) +
+    ggtitle("thinner bars + loess line + se edges only")
+)
+
+print(p + geom_bar(stat="identity",fill="grey80",width=90) +
+    stat_smooth(method="loess",span=0.5,color="black",
+                geom="ribbon",fill="NA",linetype=3) +
+    ggtitle("thinner bars + loess se edges only")
+)
+
+print(p + geom_bar(stat="identity",fill="grey50",width=90) +
+    stat_smooth(method="loess",span=0.5,color="black",
+                geom="ribbon",fill="NA",linetype=3) +
+    ggtitle("darker thin bars + loess se edges only")
+)
+
+print(p + our_point_geom +
+    geom_smooth(method="loess",span=0.1,se=F,alpha=I(0.5)) + 
+    ggtitle("span=0.1")
+)
+
+print(p + our_point_geom +
+    geom_smooth(method="loess",span=0.25,se=F,alpha=I(0.5)) +
+    ggtitle("span=0.25")
+)
+
+print(p + our_point_geom +
+    geom_smooth(method="loess",span=0.5,se=F,alpha=I(0.5)) +
+    ggtitle("span=0.5")
+)
+
+print(p + our_point_geom +
+    geom_smooth(method="loess",span=0.75,se=F,alpha=I(0.5)) +
+    ggtitle("span=0.75")
+)
+
+print(p + our_point_geom +
+    geom_smooth(method="loess",span=0.5,degree=1,se=F) +
+    ggtitle("degree=1")
+)
+
+print(p + our_point_geom +
+    geom_smooth(method="loess",span=0.5,degree=2,se=F) +
+    ggtitle("degree=2")
+)
+
 print(p + geom_line() +
     ggtitle("line plot")
 )
@@ -62,65 +133,6 @@ print(p + our_point_geom +
 print(p + our_point_geom +
     geom_smooth(method="loess",span=0.5,color="black",se=T) +
     ggtitle("point + smoother + se band")
-)
-
-print(p + geom_bar(stat="identity",fill="grey80") +
-    geom_smooth(method="loess",span=0.5,color="black",se=F) +
-    ggtitle("bars")
-)
-
-print(p + geom_bar(stat="identity",
-                   fill="white",color="grey80",size=0.25) +
-    geom_smooth(method="loess",span=0.5,color="black",se=F) +
-    ggtitle("hollow bars")
-)
-
-# width in days (x-axis scale)
-print(p + geom_bar(stat="identity",fill="grey80",width=90) +
-    geom_smooth(method="loess",span=0.5,color="black",se=F) +
-    ggtitle("thinner bars")
-)
-
-print(p + geom_bar(stat="identity",fill="grey80",width=90) +
-    geom_smooth(method="loess",span=0.5,color="black",se=T) +
-    ggtitle("thinner bars + se")
-)
-
-print(p + geom_bar(stat="identity",fill="grey80",width=90) +
-    stat_smooth(method="loess",span=0.5,color="black",
-                geom="ribbon",fill="NA",linetype=3) +
-    stat_smooth(method="loess",span=0.5,color="black",se=F) +
-    ggtitle("thinner bars + se edges only")
-)
-
-print(p + our_point_geom +
-    geom_smooth(method="loess",span=0.1,se=F,alpha=I(0.5)) + 
-    ggtitle("span=0.1")
-)
-
-print(p + our_point_geom +
-    geom_smooth(method="loess",span=0.25,se=F,alpha=I(0.5)) +
-    ggtitle("span=0.25")
-)
-
-print(p + our_point_geom +
-    geom_smooth(method="loess",span=0.5,se=F,alpha=I(0.5)) +
-    ggtitle("span=0.5")
-)
-
-print(p + our_point_geom +
-    geom_smooth(method="loess",span=0.75,se=F,alpha=I(0.5)) +
-    ggtitle("span=0.75")
-)
-
-print(p + our_point_geom +
-    geom_smooth(method="loess",span=0.5,degree=1,se=F) +
-    ggtitle("degree=1")
-)
-
-print(p + our_point_geom +
-    geom_smooth(method="loess",span=0.5,degree=2,se=F) +
-    ggtitle("degree=2")
 )
 
 for(i in 1:5) {
