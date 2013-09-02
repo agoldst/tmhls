@@ -681,3 +681,33 @@ labelings <- sapply(seq(m$n) - 1,function(i) {
 labelings <- paste(sprintf("%03d",seq(m$n)),labelings)
 writeLines(labelings,"models/hls_k150_v100K/tytm_corr_labels.txt")
 ```
+
+# topic coherence
+
+After looking at Mimno et al, "Semantic Coherence in Topic Models," I wondered about the coherence scores in our model. 
+
+```{r}
+d <- read_diagnostics("models/hls_k150_v100K/diagnostics.xml")
+d$topics[,c("topic","coherence")]
+```
+
+Or, looking at the distribution,
+```{r}
+qplot(coherence,data=d$topics,geom="bar")
+```
+
+The really bad topic is `r which.min(d$topics$coherence)` (should be 101), i.e. `r topic_name(which.min(d$topics$coherence),m$wkf)`.
+
+Mimno et al remark that "small" topics tend to do worse on the coherence measure, and indeed:
+
+```{r}
+qplot(tokens,coherence,data=d$topics,geom="point")
+```
+
+This also means that the boringest, most corpus-like topics are best on coherence:
+
+```{r}
+qplot(corpus_dist,coherence,label=topic_names(m$wkf,n=2,topic),
+      data=d$topics,
+      geom="text")
+```
