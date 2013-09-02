@@ -329,6 +329,53 @@ make_figures_setup <- function() {
     m
 }
 
+fig_power <- function(filename="power.pdf",fig_dir="essay/figure") {
+    message("[fig:power]")
+
+  # single word, but could tally up total for multiple words
+    series_list <- vector("list",m$n)
+    series_keep <- logical(m$n)
+    cur <- 1
+    topic_labels <- character()
+    totals <- colSums(m$term_year)   # totals for *all* topics
+
+    topics <- c(10,80,93) #??? 
+    word <- "power"
+
+    for(topic in topics) {
+        load(sprintf("models/hls_k150_v100K/tytm/%03d.rda",topic))
+        series <- term_year_series_frame(word,
+                                         tytm_result$tym,tytm_result$yseq,
+                                         m$vocab,
+                                         raw_counts=F,
+                                         denominator=totals)
+        if(any(series$weight > 0)) {
+            series$topic <- topic_name_fig(topic)
+            series_list[[cur]] <- series
+            cur <- cur + 1
+        } # (if)
+    } # (for)
+    series_frame <- do.call(rbind,series_list)
+
+    total_frame <- term_year_series_frame(word,
+                                          term_year=m$term_year,
+                                          year_seq=m$term_year_yseq,
+                                          vocab=m$vocab,
+                                          raw_counts=F)
+
+    p <- ggplot(total_frame,aes(year,weight))
+    p <- p + geom_line(linetype=2,color="grey50")
+    p <- p + geom_area(data=series_frame,
+                       aes(group=topic,fill=topic)) +
+        scale_fill_grey()
+
+    p <- p + plot_theme
+
+    render_plot(p,filename,fig_dir,
+                w=6,h=4)
+
+}
+
 render_all <- function () {
     fig_numbers()
     fig_criticism()
@@ -336,6 +383,7 @@ render_all <- function () {
     fig_recent()
     fig_t080()
     fig_theory()
+    fig_power()
 
     return()
 }
