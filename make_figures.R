@@ -16,7 +16,9 @@ add_year_proportion_axes <- function(p,
         ylab(ylabel)
 }
 
-our_geom_smooth <- geom_smooth(method="loess",span=0.5,color="black",se=F)
+our_geom_smooth <- geom_smooth(method="loess",span=0.5,
+                               fill="grey60",
+                               color="black",se=T)
 time_series_geom <-
         geom_bar(stat="identity",fill="grey80",width=90)
 
@@ -81,6 +83,8 @@ fig_criticism <- function(filename="criticism.pdf",fig_dir="essay/figure") {
         topics=16,
         denominator=NULL,
         rolling_window=1)
+
+    # TODO show frequency in unstopped corpus?
     to_plot[[2]] <- term_year_series_frame("criticism",
         term_year=m$term_year,
         year_seq=m$term_year_yseq,
@@ -243,6 +247,7 @@ fig_numbers <- function(filename="numbers.pdf",fig_dir="essay/figure") {
     numbers <- c(cardinals,ordinals)
 
     # NB in stripped corpus, "one" is a stopword
+    # TODO show frequency in unstopped corpus?
     to_plot <- term_year_series_frame(numbers,
                                       term_year=m$term_year,
                                       year_seq=m$term_year_yseq,
