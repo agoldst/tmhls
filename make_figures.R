@@ -484,4 +484,53 @@ alt_fig_power <- function(filename="power.pdf",fig_dir="essay/figure", word = "p
   
 }
 
+alt_fig_form <- function(filename="formalism-waves.pdf",fig_dir="essay/figure") {
+  message("[fig:form]")
+  vocabfile = "/Users/tunderwood/Journals/new\ results/hls_k150_v100K/vocab.txt"
+  AllWords <- scan(vocabfile, what = character(98835), encoding="utf-8", sep = '\n')
+  
+  wordlists = rev(c("style manner", "verse meter", "pattern imagery symbol", "metaphor metaphors literal"))
+  
+  yseries = numeric()
+  stackorder = numeric()
+  yearsequence = seq(1889, 2012)
+  
+  library(Matrix)
+  load("/Users/tunderwood/Journals/new\ results/hls_k150_v100K/tym.rda")
+  tym_m <- as.matrix(tym_result$tym)
+  
+  denominator = integer(125)
+  for (i in seq(125)) {
+    denominator[i] = sum(tym_m[ , i])
+  }
+  ordercount = 1
+  for (discourse in wordlists) {
+    thisdiscoursefrequency = rep(0, 124)
+    words <- strsplit(discourse, " ")[[1]]
+    for (word in words) {
+      wordidx = which(AllWords == word)
+      thisdiscoursefrequency = thisdiscoursefrequency + tym_m[wordidx, ]
+    }
+    thisdiscoursefrequency = moving_average((thisdiscoursefrequency / denominator), 2)
+    yseries = c(yseries, thisdiscoursefrequency[1:124])
+    stackorder = c(stackorder, rep(ordercount, 124))
+    ordercount = ordercount + 1
+  }
+  
+  
+  df <- data.frame(x = rep(yearsequence, length(wordlists)), y = yseries, vocabulary = as.character(stackorder),  topic = c(rep(wordlists[1],124), rep(wordlists[2],124), rep(wordlists[3], 124), rep(wordlists[4], 124)))
+  levels(df$topic) <- wordlists
+  df$vocabulary <- factor(df$vocabulary, levels = c(1,2,3,4))
+  chromatic <- c("gray10", "gray45", "gray80", "gray30")
+  
+  p <-ggplot(df, aes(x=x, y=y, group = vocabulary, colour = vocabulary, fill = vocabulary, order = -as.integer(vocabulary)))
+  p <- p + geom_area(aes(colour= vocabulary, fill = vocabulary), position = 'stack') + scale_colour_manual(values=chromatic, legend = FALSE)  + scale_fill_manual(values = chromatic, labels = wordlists)
+  p <- p + scale_x_continuous("") + scale_y_continuous("percentage of words in the whole corpus")
+  p <- p + plot_theme
+  print(p)
+  render_plot(p,filename, "/Users/tunderwood/Journals/tmhls/essay/figure",
+              w=6,h=4)
+  
+}
+
 
