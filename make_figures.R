@@ -315,9 +315,10 @@ fig_theory <- function(filename="theory.pdf",fig_dir="essay/figure") {
 
 # setup and execution
 # -------------------
-make_figures_setup <- function() {
+make_figures_setup <- function(workingdir = "~/Documents/research/20c/hls/tmhls") {
     # load data
-    setwd("~/Documents/research/20c/hls/tmhls")
+    if (workingdir == "underwood") workingdir = "/Users/tunderwood/Journals/new results/hls_k150_v100K"
+    setwd(workingdir)
     library(Matrix)
     source("analyze_model.R")
     m <- do.call(analyze_model,model_files("hls_k150_v100K"))
@@ -335,76 +336,152 @@ make_figures_setup <- function() {
 }
 
 fig_power <- function(filename="power.pdf",fig_dir="essay/figure") {
-    message("[fig:power]")
-
+  message("[fig:power]")
+  
   # single word, but could tally up total for multiple words
-    series_list <- vector("list",m$n)
-    series_keep <- logical(m$n)
-    cur <- 1
-    topic_labels <- character()
-    totals <- colSums(m$term_year)   # totals for *all* topics
-
-    topics <- c(10,80,93) #??? 
-    word <- "power"
-
-    for(topic in topics) {
-        load(sprintf("models/hls_k150_v100K/tytm/%03d.rda",topic))
-        series <- term_year_series_frame(word,
-                                         tytm_result$tym,tytm_result$yseq,
-                                         m$vocab,
-                                         raw_counts=F,
-                                         denominator=totals)
-        if(any(series$weight > 0)) {
-            series$topic <- topic_name_fig(topic)
-            series_list[[cur]] <- series
-            cur <- cur + 1
-        } # (if)
-    } # (for)
-    series_frame <- do.call(rbind,series_list)
-
-    total_frame <- term_year_series_frame(word,
-                                          term_year=m$term_year,
-                                          year_seq=m$term_year_yseq,
-                                          vocab=m$vocab,
-                                          raw_counts=F)
-
-    p <- ggplot(total_frame,aes(year,weight))
-    p <- p + geom_line(linetype=2,color="grey50")
-    p <- p + geom_area(data=series_frame,
-                       aes(group=topic,fill=topic)) +
-        scale_fill_grey()
-
-    p <- p + plot_theme
-
-    render_plot(p,filename,fig_dir,
-                w=6,h=4)
-
+  series_list <- vector("list",m$n)
+  series_keep <- logical(m$n)
+  cur <- 1
+  topic_labels <- character()
+  totals <- colSums(m$term_year)   # totals for *all* topics
+  
+  topics <- c(10,80,93) #??? 
+  word <- "power"
+  
+  for(topic in topics) {
+    load(sprintf("models/hls_k150_v100K/tytm/%03d.rda",topic))
+    series <- term_year_series_frame(word,
+                                     tytm_result$tym,tytm_result$yseq,
+                                     m$vocab,
+                                     raw_counts=F,
+                                     denominator=totals)
+    if(any(series$weight > 0)) {
+      series$topic <- topic_name_fig(topic)
+      series_list[[cur]] <- series
+      cur <- cur + 1
+    } # (if)
+  } # (for)
+  series_frame <- do.call(rbind,series_list)
+  
+  total_frame <- term_year_series_frame(word,
+                                        term_year=m$term_year,
+                                        year_seq=m$term_year_yseq,
+                                        vocab=m$vocab,
+                                        raw_counts=F)
+  
+  p <- ggplot(total_frame,aes(year,weight))
+  p <- p + geom_line(linetype=2,color="grey50")
+  p <- p + geom_area(data=series_frame,
+                     aes(group=topic,fill=topic)) +
+    scale_fill_grey()
+  
+  p <- p + plot_theme
+  
+  render_plot(p,filename,fig_dir,
+              w=6,h=4)
+  
 }
 
 render_all <- function () {
-    fig_numbers()
-    fig_criticism()
-    fig_formalism_waves()
-    fig_recent()
-    fig_t080()
-    fig_theory()
-    fig_power()
-
-    return()
+  fig_numbers()
+  fig_criticism()
+  fig_formalism_waves()
+  fig_recent()
+  fig_t080()
+  fig_theory()
+  fig_power()
+  
+  return()
 }
 
 # main program
 # model object (initialized with make_figures()) 
 if(!exists("m")) {
-    message("No 'm' found; initializing...")
-    m <- make_figures_setup()
+  message("No 'm' found; initializing...")
+  m <- make_figures_setup()
 }
 
 # only save all plots if this flag is set
 # I liked R better when it was C
 
 if(exists("MAKE_FIGURES_RENDER_ALL") && MAKE_FIGURES_RENDER_ALL) {
-    render_all()
+  render_all()
 } else {
-    message("No plots rendered; call fig_* or render_all()")
+  message("No plots rendered; call fig_* or render_all()")
 }
+
+## ------------------------------------------
+## Alternate functions using paths that work on Underwood's computer.
+
+moving_average <- function(avector, window) {
+  vectorlen = length(avector)
+  smoothedvector = numeric(vectorlen)
+  for (i in seq(vectorlen)) {
+    windowstart = i - window
+    windowend = i + window
+    if (windowstart < 1) windowstart = 1
+    if (windowend > vectorlen) windowend = vectorlen
+    smoothedvector[i] = mean(avector[windowstart: windowend])
+  }
+  smoothedvector
+}
+
+alt_fig_power <- function(filename="power.pdf",fig_dir="essay/figure", word = "power") {
+  message("[fig:power]")
+  vocabfile = "/Users/tunderwood/Journals/new\ results/hls_k150_v100K/vocab.txt"
+  AllWords <- scan(vocabfile, what = character(98835), encoding="utf-8", sep = '\n')
+  yseries = numeric()
+  
+  yearsequence = seq(1889, 2012)
+  topics <- c(10,80)
+  topiclabel = c("10", "80", "other")
+  wordidx = which(AllWords == word)
+  
+  library(Matrix)
+  load("/Users/tunderwood/Journals/new\ results/hls_k150_v100K/tym.rda")
+  tym_m <- as.matrix(tym_result$tym)
+#   use this denominator for "percent of X word in topic Y"
+#   denominator = tym_m[wordidx, ]
+#   print(denominator)
+  # this denominator gives "percent of total vocab that is X word in topic Y"
+  denominator = integer(125)
+  for (i in seq(125)) {
+    denominator[i] = sum(tym_m[ , i])
+  }
+  
+  for(topic in topics) {
+    load(sprintf("/Users/tunderwood/Journals/new\ results/hls_k150_v100K/tytm/%03d.rda",topic))
+    tytm_m <- as.matrix(tytm_result$tym)
+    termyearvector <- moving_average(((tytm_m[wordidx, ] / denominator) * 100), 2)
+    termyearvector <- termyearvector[1:124]
+    yseries = c(yseries, termyearvector)
+  }
+  
+  allother <- rep(0, 124)
+  for (topic in seq(150)) {
+    if (!topic %in% topics) {
+      load(sprintf("/Users/tunderwood/Journals/new\ results/hls_k150_v100K/tytm/%03d.rda",topic))
+      tytm_m <- as.matrix(tytm_result$tym)
+      termyearvector <- ((tytm_m[wordidx, ] / denominator) * 100)
+      allother <- allother + termyearvector[1:124]
+    }
+  }
+  allother <- moving_average(allother, 2)
+  yseries <- c(yseries, allother)
+  
+  df <- data.frame(x = rep(yearsequence, 3), y = yseries, topic = c(rep(topiclabel[1],124), rep(topiclabel[2],124), rep(topiclabel[3], 124)))
+  levels(df$topic) <- topiclabel
+  
+  chromatic <- c("gray10", "gray40", "gray75")
+  
+  p <-ggplot(df, aes(x=x, y=y, group = topic, colour = topic, fill = topic))
+  p <- p + geom_area(aes(colour= topic, fill = topic), position = 'stack') + scale_colour_manual(values=chromatic, legend = FALSE)  + scale_fill_manual(values = chromatic, labels = topiclabel)
+  p <- p + scale_x_continuous("") + scale_y_continuous("'power' as a % of words in the whole corpus")
+  p <- p + plot_theme
+  print(p)
+  render_plot(p,filename, "/Users/tunderwood/Journals/tmhls/essay/figure",
+               w=6,h=4)
+  
+}
+
+
