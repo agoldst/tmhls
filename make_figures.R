@@ -183,6 +183,10 @@ fig_formalism_waves <- function(filename="formalism-waves.pdf",
 fig_recent <- function(filename="recent.pdf",fig_dir="essay/figure") {
     message("[fig:recent]")
 
+    # on fixing up layout and strip.background=element_blank()
+    # http://stackoverflow.com/questions/17144182/ggplot2-and-gridextra-completely-remove-strip-in-facet-grid-not-just-invisibl
+    # http://stackoverflow.com/questions/14185754/remove-strip-background-keep-panel-border?rq=1
+
     roll <- 3
     # 010 would be good to show, but it's confusing
     recent_theory <- c(015,143,138,058)
