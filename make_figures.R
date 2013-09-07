@@ -1,4 +1,7 @@
 library(ggplot2)
+library(plyr)
+library(Matrix)
+library(zoo,warn.conflicts=F)
 
 # global variables: plot_theme, m (initialized below)
 # ----------------
@@ -319,20 +322,62 @@ fig_theory <- function(filename="theory.pdf",fig_dir="essay/figure") {
 
 # setup and execution
 # -------------------
-make_figures_setup <- function(workingdir = "~/Documents/research/20c/hls/tmhls") {
-    # load data
-    if (workingdir == "underwood") workingdir = "/Users/tunderwood/Journals/new results/hls_k150_v100K"
+make_figures_setup <- function(
+        workingdir = "~/Documents/research/20c/hls/tmhls",
+        model_dir = file.path(workingdir,"models/hls_k150_v100K"),
+        dfr_analysis="~/Developer/dfr-analysis"
+        ) {
+
+    # a special form for workingdir
+    if (workingdir == "underwood")  {
+        workingdir <- "/Users/tunderwood/Journals/new results/hls_k150_v100K"
+        model_dir <- workingdir
+    }
+
+    # load functions from dfr-analysis
+    setwd(dfr_analysis)
+    message("wd now:",dfr_analysis)
+    source("metadata.R")
+    source("topics_rmallet.R")
+    source("topics_vis.R")
+
     setwd(workingdir)
-    library(Matrix)
-    source("analyze_model.R")
-    m <- do.call(analyze_model,model_files("hls_k150_v100K"))
+    message("wd now:",workingdir)
+
+
+    # initialize result object
+    m <- list()
+
+    m$model_dir <- model_dir # store for later loading of tytm/*
+
+    message("Loading metadata")
+    # compute file paths
+    dfr_data_root <- "~/Documents/research/20c/hls/tmhls/dfr-data"
+    journal_dirs <- c("elh_ci_all",
+                   "mlr1905-1970",
+                   "mlr1971-2013",
+                   "modphil_all",
+                   "nlh_all",
+                   "pmla_all",
+                   "res1925-1980",
+                   "res1981-2012")
+    dfr_dirs <- file.path(dfr_data_root,journal_dirs)
+    m$metadata <- read_metadata(file.path(dfr_dirs,"citations.CSV"))
+
+    message("Loading modeling results") 
+    # compute file paths
+    m$wkf <- read.csv(file.path(model_dir,"wkf_nosmooth.csv"),as.is=T)
+    m$doctops <- read.csv(file.path(model_dir,"doc_topics.csv"),as.is=T)
+    m$vocab <- readLines(file.path(model_dir,"vocab.txt"))
+    m$id_map <- readLines(file.path(model_dir,"id_map.txt"))
+
     m$dtw <- merge(m$doctops,m$metadata[,c("id","pubdate")],by="id")
     m$topic_year <- tm_yearly_totals(tm_wide=m$dtw)
     m$dtm <- doc_topics_matrix(m$doctops)
     m$n <- length(unique(m$wkf$topic))
 
     # tym_result:
-    load("models/hls_k150_v100K/tym.rda")
+    load(file.path(model_dir,"tym.rda"))
     m$term_year <- tym_result$tym
     m$term_year_yseq <- tym_result$yseq
 
@@ -353,7 +398,7 @@ fig_power <- function(filename="power.pdf",fig_dir="essay/figure") {
   word <- "power"
   
   for(topic in topics) {
-    load(sprintf("models/hls_k150_v100K/tytm/%03d.rda",topic))
+    load(file.path(m$model_dir,sprintf("tytm/%03d.rda",topic)))
     series <- term_year_series_frame(word,
                                      tytm_result$tym,tytm_result$yseq,
                                      m$vocab,
@@ -386,14 +431,16 @@ fig_power <- function(filename="power.pdf",fig_dir="essay/figure") {
   
 }
 
-render_all <- function () {
-  fig_numbers()
-  fig_criticism()
-  fig_formalism_waves()
-  fig_recent()
-  fig_t080()
-  fig_theory()
-  fig_power()
+render_all <- function (fig_dir="essay/figure") {
+  fig_numbers(fig_dir=fig_dir)
+  fig_criticism(fig_dir=fig_dir)
+#  fig_formalism_waves(fig_dir=fig_dir)
+  fig_recent(fig_dir=fig_dir)
+  fig_t080(fig_dir=fig_dir)
+  fig_theory(fig_dir=fig_dir)
+#  fig_power(fig_dir=fig_dir)
+  alt_fig_power(fig_dir=fig_dir)
+  alt_fig_form(fig_dir=fig_dir)
   
   return()
 }
@@ -432,8 +479,9 @@ moving_average <- function(avector, window) {
 
 alt_fig_power <- function(filename="power.pdf",fig_dir="essay/figure", word = "power") {
   message("[fig:power]")
-  vocabfile = "/Users/tunderwood/Journals/new\ results/hls_k150_v100K/vocab.txt"
-  AllWords <- scan(vocabfile, what = character(98835), encoding="utf-8", sep = '\n')
+  library(Matrix)
+  
+  AllWords <- m$vocab
   yseries = numeric()
   
   yearsequence = seq(1889, 2012)
@@ -441,9 +489,7 @@ alt_fig_power <- function(filename="power.pdf",fig_dir="essay/figure", word = "p
   topiclabel = c("10", "80", "other")
   wordidx = which(AllWords == word)
   
-  library(Matrix)
-  load("/Users/tunderwood/Journals/new\ results/hls_k150_v100K/tym.rda")
-  tym_m <- as.matrix(tym_result$tym)
+  tym_m <- as.matrix(m$term_year)
 #   use this denominator for "percent of X word in topic Y"
 #   denominator = tym_m[wordidx, ]
 #   print(denominator)
@@ -454,7 +500,7 @@ alt_fig_power <- function(filename="power.pdf",fig_dir="essay/figure", word = "p
   }
   
   for(topic in topics) {
-    load(sprintf("/Users/tunderwood/Journals/new\ results/hls_k150_v100K/tytm/%03d.rda",topic))
+    load(file.path(m$model_dir,sprintf("tytm/%03d.rda",topic)))
     tytm_m <- as.matrix(tytm_result$tym)
     termyearvector <- moving_average(((tytm_m[wordidx, ] / denominator) * 100), 2)
     termyearvector <- termyearvector[1:124]
@@ -464,7 +510,7 @@ alt_fig_power <- function(filename="power.pdf",fig_dir="essay/figure", word = "p
   allother <- rep(0, 124)
   for (topic in seq(150)) {
     if (!topic %in% topics) {
-      load(sprintf("/Users/tunderwood/Journals/new\ results/hls_k150_v100K/tytm/%03d.rda",topic))
+      load(file.path(m$model_dir,sprintf("tytm/%03d.rda",topic)))
       tytm_m <- as.matrix(tytm_result$tym)
       termyearvector <- ((tytm_m[wordidx, ] / denominator) * 100)
       allother <- allother + termyearvector[1:124]
@@ -482,16 +528,16 @@ alt_fig_power <- function(filename="power.pdf",fig_dir="essay/figure", word = "p
   p <- p + geom_area(aes(colour= topic, fill = topic), position = 'stack') + scale_colour_manual(values=chromatic, legend = FALSE)  + scale_fill_manual(values = chromatic, labels = topiclabel)
   p <- p + scale_x_continuous("") + scale_y_continuous("'power' as a % of words in the whole corpus")
   p <- p + plot_theme
-  print(p)
-  render_plot(p,filename, "/Users/tunderwood/Journals/tmhls/essay/figure",
+
+  render_plot(p,filename, fig_dir,
                w=6,h=4)
-  
+  p
 }
 
 alt_fig_form <- function(filename="formalism-waves.pdf",fig_dir="essay/figure") {
   message("[fig:form]")
-  vocabfile = "/Users/tunderwood/Journals/new\ results/hls_k150_v100K/vocab.txt"
-  AllWords <- scan(vocabfile, what = character(98835), encoding="utf-8", sep = '\n')
+  
+  AllWords <- m$vocab
   
   wordlists = rev(c("style manner", "verse meter", "pattern imagery symbol", "metaphor metaphors literal"))
   
@@ -499,16 +545,14 @@ alt_fig_form <- function(filename="formalism-waves.pdf",fig_dir="essay/figure") 
   stackorder = numeric()
   yearsequence = seq(1889, 2012)
   
-  library(Matrix)
-  load("/Users/tunderwood/Journals/new\ results/hls_k150_v100K/tym.rda")
-  tym_m <- as.matrix(tym_result$tym)
+  tym_m <- as.matrix(m$term_year)
   
   denominator = integer(125)
   for (i in seq(125)) {
     denominator[i] = sum(tym_m[ , i])
   }
   ordercount = 1
-  for (discourse in wordlists) {
+  for (discourse in wordlists) {            # LOL
     thisdiscoursefrequency = rep(0, 124)
     words <- strsplit(discourse, " ")[[1]]
     for (word in words) {
@@ -531,10 +575,11 @@ alt_fig_form <- function(filename="formalism-waves.pdf",fig_dir="essay/figure") 
   p <- p + geom_area(aes(colour= vocabulary, fill = vocabulary), position = 'stack') + scale_colour_manual(values=chromatic, legend = FALSE)  + scale_fill_manual(values = chromatic, labels = wordlists)
   p <- p + scale_x_continuous("") + scale_y_continuous("percentage of words in the whole corpus")
   p <- p + plot_theme
-  print(p)
-  render_plot(p,filename, "/Users/tunderwood/Journals/tmhls/essay/figure",
+
+  render_plot(p,filename, fig_dir,
               w=6,h=4)
   
+  p
 }
 
 
