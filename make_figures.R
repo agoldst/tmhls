@@ -5,7 +5,9 @@
 #
 # source("make_figures.R")
 # m <- make_figures_setup(workingdir="underwood",
-#                         dfr_analysis="location/of/dfr-analysis/")
+#                         dfr_analysis="/location/of/dfr-analysis/",
+#                         citations_files=c("/location/of/1/citations.CSV",
+#                                           "/location/of/2/citations.CSV",...))
 # render_all(fig_dir="location/of/essay/figure/")
 # # or
 # fig_criticism(fig_dir="location/of/essay/figure/")
@@ -338,8 +340,17 @@ fig_theory <- function(filename="theory.pdf",fig_dir="essay/figure") {
 make_figures_setup <- function(
         workingdir = "~/Documents/research/20c/hls/tmhls",
         model_dir = file.path(workingdir,"models/hls_k150_v100K"),
-        dfr_analysis="~/Developer/dfr-analysis"
-        ) {
+        dfr_analysis="~/Developer/dfr-analysis",
+        dfr_data_root=file.path(workingdir,"dfr-data"),
+        journal_dirs=c("elh_ci_all",
+                       "mlr1905-1970",
+                       "mlr1971-2013",
+                       "modphil_all",
+                       "nlh_all",
+                       "pmla_all",
+                       "res1925-1980",
+                       "res1981-2012"),
+        citations_files=file.path(dfr_data_root,journal_dirs,"citations.CSV")) {
 
     # a special form for workingdir
     if (workingdir == "underwood")  {
@@ -365,17 +376,7 @@ make_figures_setup <- function(
 
     message("Loading metadata")
     # compute file paths
-    dfr_data_root <- "~/Documents/research/20c/hls/tmhls/dfr-data"
-    journal_dirs <- c("elh_ci_all",
-                   "mlr1905-1970",
-                   "mlr1971-2013",
-                   "modphil_all",
-                   "nlh_all",
-                   "pmla_all",
-                   "res1925-1980",
-                   "res1981-2012")
-    dfr_dirs <- file.path(dfr_data_root,journal_dirs)
-    m$metadata <- read_metadata(file.path(dfr_dirs,"citations.CSV"))
+    m$metadata <- read_metadata(citations_files)
 
     message("Loading modeling results") 
     # compute file paths
