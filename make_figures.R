@@ -437,8 +437,8 @@ alt_fig_power <- function(filename="power.pdf",fig_dir="essay/figure", word = "p
   yseries = numeric()
   
   yearsequence = seq(1889, 2012)
-  topics <- c(80, 10)
-  topiclabel = c("80", "10", "total")
+  topics <- c(10,80)
+  topiclabel = c("10", "80", "other")
   wordidx = which(AllWords == word)
   
   library(Matrix)
@@ -452,16 +452,13 @@ alt_fig_power <- function(filename="power.pdf",fig_dir="essay/figure", word = "p
   for (i in seq(125)) {
     denominator[i] = sum(tym_m[ , i])
   }
-  theorder = numeric()
-  count = 1
+  
   for(topic in topics) {
     load(sprintf("/Users/tunderwood/Journals/new\ results/hls_k150_v100K/tytm/%03d.rda",topic))
     tytm_m <- as.matrix(tytm_result$tym)
     termyearvector <- moving_average(((tytm_m[wordidx, ] / denominator) * 100), 2)
     termyearvector <- termyearvector[1:124]
     yseries = c(yseries, termyearvector)
-    theorder = c(theorder, rep(count, 124))
-    count = count + 1
   }
   
   allother <- rep(0, 124)
@@ -475,16 +472,14 @@ alt_fig_power <- function(filename="power.pdf",fig_dir="essay/figure", word = "p
   }
   allother <- moving_average(allother, 2)
   yseries <- c(yseries, allother)
-  theorder = c(theorder, rep(count, 124))
   
-  df <- data.frame(x = rep(yearsequence, 3), y = yseries, topics = as.character(theorder), topic = c(rep(topiclabel[1],124), rep(topiclabel[2],124), rep(topiclabel[3], 124)))
+  df <- data.frame(x = rep(yearsequence, 3), y = yseries, topic = c(rep(topiclabel[1],124), rep(topiclabel[2],124), rep(topiclabel[3], 124)))
   levels(df$topic) <- topiclabel
-  df$topics <- factor(df$topics, levels = c(3,2,1))
   
-  chromatic <- rev(c("gray10", "gray40", "gray75"))
+  chromatic <- c("gray10", "gray40", "gray75")
   
-  p <-ggplot(df, aes(x=x, y=y, group = topics, colour = topics, fill = topics, order = -as.integer(topics)))
-  p <- p + geom_area(aes(colour= topics, fill = topics), position = 'stack') + scale_colour_manual(values=chromatic, legend = FALSE)  + scale_fill_manual(values = chromatic, labels = rev(topiclabel))
+  p <-ggplot(df, aes(x=x, y=y, group = topic, colour = topic, fill = topic))
+  p <- p + geom_area(aes(colour= topic, fill = topic), position = 'stack') + scale_colour_manual(values=chromatic, legend = FALSE)  + scale_fill_manual(values = chromatic, labels = topiclabel)
   p <- p + scale_x_continuous("") + scale_y_continuous("'power' as a % of words in the whole corpus")
   p <- p + plot_theme
   print(p)
