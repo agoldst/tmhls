@@ -1,3 +1,16 @@
+# USAGE
+#
+# All the plotting functions look for data in a global variable m.
+# To set this up:
+#
+# source("make_figures.R")
+# m <- make_figures_setup(workingdir="underwood",
+#                         dfr_analysis="location/of/dfr-analysis/")
+# render_all(fig_dir="location/of/essay/figure/")
+# # or
+# fig_criticism(fig_dir="location/of/essay/figure/")
+# # etc 
+
 library(ggplot2)
 library(plyr)
 library(Matrix)
@@ -432,13 +445,12 @@ fig_power <- function(filename="power.pdf",fig_dir="essay/figure") {
 }
 
 render_all <- function (fig_dir="essay/figure") {
+  stopifnot(exists("m"))
   fig_numbers(fig_dir=fig_dir)
   fig_criticism(fig_dir=fig_dir)
-#  fig_formalism_waves(fig_dir=fig_dir)
   fig_recent(fig_dir=fig_dir)
   fig_t080(fig_dir=fig_dir)
   fig_theory(fig_dir=fig_dir)
-#  fig_power(fig_dir=fig_dir)
   alt_fig_power(fig_dir=fig_dir)
   alt_fig_form(fig_dir=fig_dir)
   
@@ -446,20 +458,11 @@ render_all <- function (fig_dir="essay/figure") {
 }
 
 # main program
-# model object (initialized with make_figures()) 
 if(!exists("m")) {
-  message("No 'm' found; initializing...")
-  m <- make_figures_setup()
+  message("No 'm' found; do: m <- make_figures_setup()")
 }
 
-# only save all plots if this flag is set
-# I liked R better when it was C
-
-if(exists("MAKE_FIGURES_RENDER_ALL") && MAKE_FIGURES_RENDER_ALL) {
-  render_all()
-} else {
-  message("No plots rendered; call fig_* or render_all()")
-}
+message("No plots rendered; call fig_* or render_all()")
 
 ## ------------------------------------------
 ## Alternate functions using paths that work on Underwood's computer.
@@ -479,8 +482,8 @@ moving_average <- function(avector, window) {
 
 alt_fig_power <- function(filename="power.pdf",fig_dir="essay/figure", word = "power") {
   message("[fig:power]")
-  vocabfile = "/Users/tunderwood/Journals/new\ results/hls_k150_v100K/vocab.txt"
-  AllWords <- scan(vocabfile, what = character(98835), encoding="utf-8", sep = '\n')
+  
+  AllWords <- m$vocab
   yseries = numeric()
   
   yearsequence = seq(1889, 2012)
@@ -489,8 +492,7 @@ alt_fig_power <- function(filename="power.pdf",fig_dir="essay/figure", word = "p
   wordidx = which(AllWords == word)
   
   library(Matrix)
-  load("/Users/tunderwood/Journals/new\ results/hls_k150_v100K/tym.rda")
-  tym_m <- as.matrix(tym_result$tym)
+  tym_m <- as.matrix(m$term_year)
   #   use this denominator for "percent of X word in topic Y"
   #   denominator = tym_m[wordidx, ]
   #   print(denominator)
@@ -502,7 +504,7 @@ alt_fig_power <- function(filename="power.pdf",fig_dir="essay/figure", word = "p
   theorder = numeric()
   count = 1
   for(topic in topics) {
-    load(sprintf("/Users/tunderwood/Journals/new\ results/hls_k150_v100K/tytm/%03d.rda",topic))
+    load(file.path(m$model_dir,sprintf("tytm/%03d.rda",topic)))
     tytm_m <- as.matrix(tytm_result$tym)
     termyearvector <- moving_average(((tytm_m[wordidx, ] / denominator) * 100), 2)
     termyearvector <- termyearvector[1:124]
@@ -514,7 +516,7 @@ alt_fig_power <- function(filename="power.pdf",fig_dir="essay/figure", word = "p
   allother <- rep(0, 124)
   for (topic in seq(150)) {
     if (!topic %in% topics) {
-      load(sprintf("/Users/tunderwood/Journals/new\ results/hls_k150_v100K/tytm/%03d.rda",topic))
+      load(file.path(m$model_dir,sprintf("tytm/%03d.rda",topic)))
       tytm_m <- as.matrix(tytm_result$tym)
       termyearvector <- ((tytm_m[wordidx, ] / denominator) * 100)
       allother <- allother + termyearvector[1:124]
@@ -534,10 +536,10 @@ alt_fig_power <- function(filename="power.pdf",fig_dir="essay/figure", word = "p
   p <- p + geom_area(aes(colour= topics, fill = topics), position = 'stack') + scale_colour_manual(values=chromatic, legend = FALSE)  + scale_fill_manual(values = chromatic, labels = rev(topiclabel))
   p <- p + scale_x_continuous("") + scale_y_continuous("'power' as a % of words in the whole corpus")
   p <- p + plot_theme
-  print(p)
-  render_plot(p,filename, "/Users/tunderwood/Journals/tmhls/essay/figure",
+
+  render_plot(p,filename, fig_dir,
               w=6,h=4)
-  
+  p
 }
 
 alt_fig_form <- function(filename="formalism-waves.pdf",fig_dir="essay/figure") {
