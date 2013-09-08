@@ -350,12 +350,14 @@ make_figures_setup <- function(
                        "pmla_all",
                        "res1925-1980",
                        "res1981-2012"),
-        citations_files=file.path(dfr_data_root,journal_dirs,"citations.CSV")) {
+        citations_files=file.path(dfr_data_root,journal_dirs,"citations.CSV"),
+        keys_file=file.path(model_dir,"wkf_nosmooth.csv")) {
 
     # a special form for workingdir
     if (workingdir == "underwood")  {
         workingdir <- "/Users/tunderwood/Journals/new results/hls_k150_v100K"
         model_dir <- workingdir
+        keys_file <- file.path(model_dir,"keys.csv") # NEEDED ?
     }
 
     # load functions from dfr-analysis
@@ -380,7 +382,7 @@ make_figures_setup <- function(
 
     message("Loading modeling results") 
     # compute file paths
-    m$wkf <- read.csv(file.path(model_dir,"wkf_nosmooth.csv"),as.is=T)
+    m$wkf <- read.csv(keys_file,as.is=T)
     m$doctops <- read.csv(file.path(model_dir,"doc_topics.csv"),as.is=T)
     m$vocab <- readLines(file.path(model_dir,"vocab.txt"))
     m$id_map <- readLines(file.path(model_dir,"id_map.txt"))
