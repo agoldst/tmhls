@@ -319,15 +319,25 @@ fig_theory <- function(filename="theory.pdf",fig_dir="essay/figure") {
     levels(to_plot$topic) <- topic_name_fig(topics)
 
     # NB free scale on y axis
+#    p <- ggplot(to_plot,aes(year,weight,fill=topic)) +
+#        geom_area(position="stack") +
+#        scale_fill_grey() +
+#        theme(legend.position="bottom")
+        
     p <- ggplot(to_plot,aes(year,weight)) +
-        time_series_geom +
-        our_geom_smooth +
-        facet_wrap(~ topic,ncol=1,scales="free_y")
+         time_series_geom +
+         our_geom_smooth +
+         facet_wrap(~ topic,ncol=1,scales="free_y")
+    #    facet_wrap(~ topic,ncol=2)
 
     p <- add_year_proportion_axes(p) +
+            plot_theme +
             theme(axis.text=element_text(size=9),
-                  strip.text=element_text(size=9)) +
-            plot_theme + ggtitle("")
+                  strip.text=element_text(size=9),
+                  strip.background=element_blank()
+                  # strip.text.x=element_blank() 
+                  ) +
+             ggtitle("")
 
     render_plot(p,filename,fig_dir)
 }
