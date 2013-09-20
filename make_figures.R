@@ -14,6 +14,9 @@
 # # etc 
 
 library(ggplot2)
+library(grid)
+library(reshape2)
+library(scales)
 library(plyr)
 library(Matrix)
 library(zoo,warn.conflicts=F)
@@ -22,7 +25,9 @@ library(zoo,warn.conflicts=F)
 # ----------------
 
 # ggplot theming 
-plot_theme <- theme_bw(base_size=10,base_family="sans") 
+plot_theme <- theme_bw(base_size=10,base_family="sans") +
+    theme(panel.grid.major.x=element_blank(),
+          panel.grid.minor.x=element_blank()) 
 
 add_year_proportion_axes <- function(p,
         xlabel="article publication year",
@@ -95,28 +100,29 @@ single_topic_plot <- function(topic,filename,fig_dir,w=5,h=3) {
 fig_criticism <- function(filename="criticism.pdf",fig_dir="essay/figure") {
     message("[fig:criticism]")
 
-    to_plot <- list()
-    to_plot[[1]] <- topic_proportions_series_frame(
+    series_topic <- topic_proportions_series_frame(
         yearly=m$topic_year,
         topics=16,
         denominator=NULL,
         rolling_window=1)
 
+    series_topic$weight <- series_topic$weight * 1000
+
     # TODO show frequency in unstopped corpus?
-    to_plot[[2]] <- term_year_series_frame("criticism",
+    series_word <- term_year_series_frame("criticism",
         term_year=m$term_year,
         year_seq=m$term_year_yseq,
         vocab=m$vocab,
         raw_counts=F) # take yearly proportions
 
-    render_plot(to_plot,filename,fig_dir,
+    series_word$weight <- series_word$weight * 10000
+
+    render_plot(list(series_topic,series_word),filename,fig_dir,
                 w=5,h=3, # TODO figure dimensions
                 render_function=function(to_plot) {
         grid.newpage()
-        pushViewport(viewport(layout=grid.layout(2,1,heights=c(2,1))))
+        pushViewport(viewport(layout=grid.layout(2,1,heights=c(3,2))))
 
-
-        plot_labels <- c("topic 16","the word \"criticism\"")
         plot_rows <- list(c(1,2),3)
         for(i in 1:2) {
 
@@ -124,29 +130,22 @@ fig_criticism <- function(filename="criticism.pdf",fig_dir="essay/figure") {
                 time_series_geom +
                 our_geom_smooth
 
-            p <- p +
-                annotate(geom="text",
-                         size=rel(3),   # nasty suspicion this is relative to
-                                        # the size of the bars
-                         hjust=0,
-                         label=plot_labels[i],
-                         x=as.Date("1895-01-01"),
-                         y=0.95 * max(to_plot[[i]]$weight))
-
             # TODO better axis/label placement
 
+            p <- p + plot_theme +
+                theme(title=element_text(size=9),
+                      axis.text=element_text(size=7))
+
+            p <- p + xlab("article publication year")
             if(i == 1) {
-                p <- add_year_proportion_axes(p,
-                                              xlabel="")
-            }
-            if(i == 2) {
-                p <- add_year_proportion_axes(p,ylabel="",
-                    yscale=scale_y_continuous(limits=c(0,0.0015),
-                                              labels=percent_format()))
+                p <- p + ylab("incidence\n per 1,000") +
+                    ggtitle(paste("topic",topic_name_fig(16)))
+            } else {
+                p <- p + ylab("incidence\n per 10,000") +
+                    ggtitle("the word \"criticism\"")
+                p <- p + theme(plot.margin=unit(c(0,1,0,0),units="lines"))
             }
 
-
-            p <- p + plot_theme
 
             print(p,
                   vp=viewport(layout.pos.row=i,
@@ -207,10 +206,10 @@ fig_recent <- function(filename="recent.pdf",fig_dir="essay/figure") {
 
     roll <- 3
     # 010 would be good to show, but it's confusing
-    recent_theory <- c(015,143,138,058)
+    recent_theory <- c(143,015,058,138)
 
-    recent_themes <- c(019,025,048,069,036,
-                       004,108,077,102)             
+    recent_themes <- c(069,019,025,077,048,036,
+                       004,102,108)             
 
     p <- list()
     tlist <- list(recent_theory,recent_themes)
@@ -222,6 +221,8 @@ fig_recent <- function(filename="recent.pdf",fig_dir="essay/figure") {
             denominator=NULL,
             rolling_window=roll)
 
+        to_plot$weight <- to_plot$weight * 1000
+
         to_plot$topic <- factor(to_plot$topic,levels=topics)
         levels(to_plot$topic) <- topic_name_fig(topics)
 
@@ -231,10 +232,16 @@ fig_recent <- function(filename="recent.pdf",fig_dir="essay/figure") {
             our_geom_smooth +
             facet_wrap(~ topic,ncol=1,scales="free_y")
 
-        p[[i]] <- add_year_proportion_axes(p[[i]]) +
-            theme(axis.text=element_text(size=9),
-                  strip.text=element_text(size=9)) +
-            plot_theme + ggtitle("")
+        p[[i]] <- p[[i]] + ylab(ifelse(i==1,
+                                       "topic incidence per 1,000 words",
+                                       ""))
+        p[[i]] <- p[[i]] +
+            xlab("publication year") +
+            plot_theme +
+            theme(axis.text=element_text(size=7),
+                  strip.text=element_text(size=7),
+                  strip.background=element_blank()) +
+                ggtitle("")
     }
 
 
@@ -249,6 +256,7 @@ fig_recent <- function(filename="recent.pdf",fig_dir="essay/figure") {
 
         print(p[[2]],
               vp=viewport(layout.pos.row=1,layout.pos.col=2))
+
         }
     )
 
@@ -387,11 +395,9 @@ make_figures_setup <- function(
     m$model_dir <- model_dir # store for later loading of tytm/*
 
     message("Loading metadata")
-    # compute file paths
     m$metadata <- read_metadata(citations_files)
 
     message("Loading modeling results") 
-    # compute file paths
     m$wkf <- read.csv(keys_file,as.is=T)
     m$doctops <- read.csv(file.path(model_dir,"doc_topics.csv"),as.is=T)
     m$vocab <- readLines(file.path(model_dir,"vocab.txt"))
@@ -603,4 +609,25 @@ alt_fig_form <- function(filename="formalism-waves.pdf",fig_dir="essay/figure") 
   p
 }
 
+browser_plots <- function(outdir,topics=seq(m$n)) {
+    for(topic in topics) {
+        to_plot <- topic_proportions_series_frame(yearly=m$topic_year,
+                                                  topics=topic,
+                                                  denominator=NULL,
+                                                  rolling_window=1)
+        p <- ggplot(to_plot,aes(year,weight))
+        p <- p +
+            time_series_geom +
+            our_geom_smooth +
+            plot_theme
+
+        p <- add_year_proportion_axes(p)    
+        p <- p + ggtitle("")
+
+        filename <- sprintf("%s/%03d.png",outdir,topic)
+        message("Saving ",filename)
+        ggsave(filename=filename,plot=p,width=6,height=3)
+        Sys.chmod(filename,"644") # make it world-readable for the web server
+    }
+}
 
