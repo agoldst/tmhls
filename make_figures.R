@@ -138,10 +138,10 @@ fig_criticism <- function(filename="criticism.pdf",fig_dir="essay/figure") {
 
             p <- p + xlab("article publication year")
             if(i == 1) {
-                p <- p + ylab("incidence\n per 1000") +
+                p <- p + ylab("topic occurrences\n per 1000 words") +
                     ggtitle(paste("topic",topic_name_fig(16)))
             } else {
-                p <- p + ylab("incidence\n per 10000") +
+                p <- p + ylab("occurrences\n per 10000 words") +
                     ggtitle("the word \"criticism\"")
                 p <- p + theme(plot.margin=unit(c(0,1,0,0),units="lines"))
             }
@@ -233,7 +233,7 @@ fig_recent <- function(filename="recent.pdf",fig_dir="essay/figure") {
             facet_wrap(~ topic,ncol=1,scales="free_y")
 
         p[[i]] <- p[[i]] + ylab(ifelse(i==1,
-                                       "incidence per 1000",
+                                       "topic occurences per 1000 words",
                                        ""))
         p[[i]] <- p[[i]] +
             xlab("publication year") +
@@ -334,7 +334,7 @@ fig_theory <- function(filename="theory.pdf",fig_dir="essay/figure") {
          facet_wrap(~ topic,ncol=1,scales="free_y")
 
     p <- p + xlab("article publication year") +
-        ylab("incidence per 1000") +
+        ylab("topic occurrences per 1000 words") +
         plot_theme +
         theme(axis.text=element_text(size=7),
               strip.text=element_text(size=9),
@@ -552,7 +552,7 @@ alt_fig_power <- function(filename="power.pdf",fig_dir="essay/figure", word = "p
   p <- p + geom_area(aes(colour= topics, fill = topics), position='stack') +
     scale_colour_manual(values=chromatic, guide="none")  +
     scale_fill_manual(values = chromatic, labels = rev(topiclabel))
-  p <- p + xlab("") +
+  p <- p + xlab("article publication year") +
     scale_y_continuous(labels=percent_format()) +
     ylab("\"power\" as percentage\n of all words in corpus")
   p <- p + plot_theme
@@ -600,9 +600,12 @@ alt_fig_form <- function(filename="formalism-waves.pdf",fig_dir="essay/figure") 
   chromatic <- c("gray10", "gray45", "gray80", "gray30")
   
   p <-ggplot(df, aes(x=x, y=y, group = vocabulary, colour = vocabulary, fill = vocabulary, order = -as.integer(vocabulary)))
-  p <- p + geom_area(aes(colour= vocabulary, fill = vocabulary), position = 'stack') + scale_colour_manual(values=chromatic, legend = FALSE)  + scale_fill_manual(values = chromatic, labels = wordlists)
-  p <- p + scale_x_continuous("") + scale_y_continuous("percentage of words in the whole corpus")
-  p <- p + plot_theme
+  p <- p + geom_area(aes(colour= vocabulary, fill = vocabulary), position = 'stack') + scale_colour_manual(values=chromatic, guide='none')  + scale_fill_manual(values = chromatic, labels = wordlists)
+  p <- p +
+    xlab("article publication year") +
+    scale_y_continuous(labels=percent_format()) +
+    ylab("percentage of words in the whole corpus") +
+    plot_theme
 
   render_plot(p,filename, fig_dir,
               w=6,h=4)
