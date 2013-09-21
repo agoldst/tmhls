@@ -138,10 +138,10 @@ fig_criticism <- function(filename="criticism.pdf",fig_dir="essay/figure") {
 
             p <- p + xlab("article publication year")
             if(i == 1) {
-                p <- p + ylab("incidence\n per 1,000") +
+                p <- p + ylab("incidence\n per 1000") +
                     ggtitle(paste("topic",topic_name_fig(16)))
             } else {
-                p <- p + ylab("incidence\n per 10,000") +
+                p <- p + ylab("incidence\n per 10000") +
                     ggtitle("the word \"criticism\"")
                 p <- p + theme(plot.margin=unit(c(0,1,0,0),units="lines"))
             }
@@ -233,7 +233,7 @@ fig_recent <- function(filename="recent.pdf",fig_dir="essay/figure") {
             facet_wrap(~ topic,ncol=1,scales="free_y")
 
         p[[i]] <- p[[i]] + ylab(ifelse(i==1,
-                                       "topic incidence per 1,000 words",
+                                       "incidence per 1000",
                                        ""))
         p[[i]] <- p[[i]] +
             xlab("publication year") +
@@ -326,28 +326,24 @@ fig_theory <- function(filename="theory.pdf",fig_dir="essay/figure") {
     to_plot$topic <- factor(to_plot$topic,levels=topics)
     levels(to_plot$topic) <- topic_name_fig(topics)
 
-    # NB free scale on y axis
-#    p <- ggplot(to_plot,aes(year,weight,fill=topic)) +
-#        geom_area(position="stack") +
-#        scale_fill_grey() +
-#        theme(legend.position="bottom")
+    to_plot$weight <- to_plot$weight * 1000
         
     p <- ggplot(to_plot,aes(year,weight)) +
          time_series_geom +
          our_geom_smooth +
          facet_wrap(~ topic,ncol=1,scales="free_y")
-    #    facet_wrap(~ topic,ncol=2)
 
-    p <- add_year_proportion_axes(p) +
-            plot_theme +
-            theme(axis.text=element_text(size=9),
-                  strip.text=element_text(size=9),
-                  strip.background=element_blank()
-                  # strip.text.x=element_blank() 
-                  ) +
-             ggtitle("")
+    p <- p + xlab("article publication year") +
+        ylab("incidence per 1000") +
+        plot_theme +
+        theme(axis.text=element_text(size=7),
+              strip.text=element_text(size=9),
+              strip.background=element_blank()
+              # strip.text.x=element_blank() 
+              ) +
+         ggtitle("")
 
-    render_plot(p,filename,fig_dir)
+    render_plot(p,filename,fig_dir,h=3.25)
 }
 
 
