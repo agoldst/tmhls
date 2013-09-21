@@ -503,7 +503,7 @@ alt_fig_power <- function(filename="power.pdf",fig_dir="essay/figure", word = "p
   
   yearsequence = seq(1889, 2012)
   topics <- c(80, 10)
-  topiclabel = c("80", "10", "total")
+  topiclabel = c("80", "10", "other") # it's not the "total" 
   wordidx = which(AllWords == word)
   
   library(Matrix)
@@ -521,19 +521,20 @@ alt_fig_power <- function(filename="power.pdf",fig_dir="essay/figure", word = "p
   for(topic in topics) {
     load(file.path(m$model_dir,sprintf("tytm/%03d.rda",topic)))
     tytm_m <- as.matrix(tytm_result$tym)
-    termyearvector <- moving_average(((tytm_m[wordidx, ] / denominator) * 100), 2)
+    termyearvector <- moving_average(((tytm_m[wordidx, ] / denominator)), 2)
     termyearvector <- termyearvector[1:124]
     yseries = c(yseries, termyearvector)
     theorder = c(theorder, rep(count, 124))
     count = count + 1
   }
   
+
   allother <- rep(0, 124)
   for (topic in seq(150)) {
     if (!topic %in% topics) {
       load(file.path(m$model_dir,sprintf("tytm/%03d.rda",topic)))
       tytm_m <- as.matrix(tytm_result$tym)
-      termyearvector <- ((tytm_m[wordidx, ] / denominator) * 100)
+      termyearvector <- ((tytm_m[wordidx, ] / denominator))
       allother <- allother + termyearvector[1:124]
     }
   }
@@ -548,8 +549,12 @@ alt_fig_power <- function(filename="power.pdf",fig_dir="essay/figure", word = "p
   chromatic <- rev(c("gray10", "gray40", "gray75"))
   
   p <-ggplot(df, aes(x=x, y=y, group = topics, colour = topics, fill = topics, order = -as.integer(topics)))
-  p <- p + geom_area(aes(colour= topics, fill = topics), position = 'stack') + scale_colour_manual(values=chromatic, legend = FALSE)  + scale_fill_manual(values = chromatic, labels = rev(topiclabel))
-  p <- p + scale_x_continuous("") + scale_y_continuous("'power' as a % of words in the whole corpus")
+  p <- p + geom_area(aes(colour= topics, fill = topics), position='stack') +
+    scale_colour_manual(values=chromatic, guide="none")  +
+    scale_fill_manual(values = chromatic, labels = rev(topiclabel))
+  p <- p + xlab("") +
+    scale_y_continuous(labels=percent_format()) +
+    ylab("\"power\" as percentage\n of all words in corpus")
   p <- p + plot_theme
 
   render_plot(p,filename, fig_dir,
