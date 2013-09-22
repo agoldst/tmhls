@@ -30,7 +30,8 @@ plot_theme <- theme_bw(base_size=10,base_family="sans") +
           panel.grid.minor.x=element_blank()) 
 
 ax <- list(xlim=scale_x_date(limits=as.Date(c("1895-01-01",
-                                              "2010-12-31"))),
+                                              "2010-12-31")),
+                             expand=c(0,0)),
            xlab=xlab("article publication year"))
 
 add_year_proportion_axes <- function(p,
