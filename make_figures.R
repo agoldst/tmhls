@@ -21,7 +21,7 @@ library(plyr)
 library(Matrix)
 library(zoo,warn.conflicts=F)
 
-# global variables: plot_theme, m (initialized below)
+# global variables: plot_theme, ax, m (initialized below)
 # ----------------
 
 # ggplot theming 
@@ -29,13 +29,16 @@ plot_theme <- theme_bw(base_size=10,base_family="sans") +
     theme(panel.grid.major.x=element_blank(),
           panel.grid.minor.x=element_blank()) 
 
+ax <- list(xlim=xlim(as.Date("1895-01-01"),as.Date("2010-12-31")),
+           xlab=xlab("article publication year"))
+
 add_year_proportion_axes <- function(p,
-        xlabel="article publication year",
+        xlabel=ax$xlab,
         ylabel="proportion of words in corpus",
         yscale=scale_y_continuous(labels=percent_format())) {
-    p + xlim(as.Date("1895-01-01"),as.Date("2005-01-01")) +
+    p + ax$lim +
         yscale +
-        xlab(xlabel) +
+        ax$xlab +
         ylab(ylabel)
 }
 
@@ -136,12 +139,12 @@ fig_criticism <- function(filename="criticism.pdf",fig_dir="essay/figure") {
                 theme(title=element_text(size=9),
                       axis.text=element_text(size=7))
 
-            p <- p + xlab("article publication year")
+            p <- p + ax$xlab + ax$xlim
             if(i == 1) {
-                p <- p + ylab("topic occurrences\n per 1000 words") +
+                p <- p + ylab("words in topic\n per 1000 words") +
                     ggtitle(paste("topic",topic_name_fig(16)))
             } else {
-                p <- p + ylab("occurrences\n per 10000 words") +
+                p <- p + ylab("word frequency\n per 10000 words") +
                     ggtitle("the word \"criticism\"")
                 p <- p + theme(plot.margin=unit(c(0,1,0,0),units="lines"))
             }
@@ -230,10 +233,11 @@ fig_recent <- function(filename="recent.pdf",fig_dir="essay/figure") {
         p[[i]] <- ggplot(to_plot,aes(year,weight)) +
             time_series_geom +
             our_geom_smooth +
+            ax$xlim +
             facet_wrap(~ topic,ncol=1,scales="free_y")
 
         p[[i]] <- p[[i]] + ylab(ifelse(i==1,
-                                       "topic occurences per 1000 words",
+                                       "words in topic per 1000 words",
                                        ""))
         p[[i]] <- p[[i]] +
             xlab("publication year") +
@@ -292,9 +296,6 @@ fig_numbers <- function(filename="numbers.pdf",fig_dir="essay/figure") {
     # TU's original plot looks like
     #
     # p <- qplot(yearsequence, numbertrajectory * 100, geom = c("point", "smooth"), span = 0.5, ylab = "percentage of corpus", xlab = "", main = "cardinal and ordinal number words, one through a hundred")
-    #
-    # I have swapped lines for points. Rolling averages would be less 
-    # aggressively smooth than loess.
 
 
     p <- add_year_proportion_axes(p) +
@@ -331,10 +332,11 @@ fig_theory <- function(filename="theory.pdf",fig_dir="essay/figure") {
     p <- ggplot(to_plot,aes(year,weight)) +
          time_series_geom +
          our_geom_smooth +
+         ax$xlim +
          facet_wrap(~ topic,ncol=1,scales="free_y")
 
-    p <- p + xlab("article publication year") +
-        ylab("topic occurrences per 1000 words") +
+    p <- p + ax$xlab +
+        ylab("words in topic per 1000 words") +
         plot_theme +
         theme(axis.text=element_text(size=7),
               strip.text=element_text(size=9),
