@@ -29,7 +29,8 @@ plot_theme <- theme_bw(base_size=10,base_family="sans") +
     theme(panel.grid.major.x=element_blank(),
           panel.grid.minor.x=element_blank()) 
 
-ax <- list(xlim=xlim(as.Date("1895-01-01"),as.Date("2010-12-31")),
+ax <- list(xlim=scale_x_date(limits=as.Date(c("1895-01-01",
+                                              "2010-12-31"))),
            xlab=xlab("article publication year"))
 
 add_year_proportion_axes <- function(p,
@@ -551,7 +552,8 @@ alt_fig_power <- function(filename="power.pdf",fig_dir="essay/figure", word = "p
   df <- data.frame(year = as.Date(rep(m$term_year_yseq, 3)),
                    weight = yseries,
                    topics = as.character(theorder),
-                   topic = rep(topiclabel,each=length(allother)))
+                   stringsAsFactors=F)
+                   #topic = rep(topiclabel,each=length(allother)))
   #levels(df$topic) <- topiclabel # does nothing
   df$topics <- factor(df$topics, levels = c(3,2,1))
   
@@ -561,7 +563,8 @@ alt_fig_power <- function(filename="power.pdf",fig_dir="essay/figure", word = "p
   p <- p + geom_area(aes(colour= topics, fill = topics), position='stack') +
     scale_colour_manual(values=chromatic, guide="none")  +
     scale_fill_manual(values = chromatic, labels = rev(topiclabel))
-  p <- p + ax$xlab + ax$xlim +
+  p <- p + ax$xlab + 
+    ax$xlim +
     scale_y_continuous(labels=percent_format()) +
     ylab("\"power\" as percentage\n of all words in corpus")
   p <- p + plot_theme
@@ -577,41 +580,54 @@ alt_fig_form <- function(filename="formalism-waves.pdf",fig_dir="essay/figure") 
   AllWords <- m$vocab
   
   wordlists = rev(c("style manner", "verse meter", "pattern imagery symbol", "metaphor metaphors literal"))
+  words <- strsplit(wordlists," ")
   
   yseries = numeric()
   stackorder = numeric()
-  yearsequence = seq(1889, 2012)
+  #yearsequence = seq(1889, 2012)
   
   tym_m <- as.matrix(m$term_year)
   
-  denominator = integer(125)
-  for (i in seq(125)) {
-    denominator[i] = sum(tym_m[ , i])
-  }
+  #denominator = integer(125)
+  #for (i in seq(125)) {
+  #  denominator[i] = sum(tym_m[ , i])
+  #}
+  denominator <- colSums(m$term_year) #equivalent
+
   ordercount = 1
-  for (discourse in wordlists) {            # LOL
-    thisdiscoursefrequency = rep(0, 124)
-    words <- strsplit(discourse, " ")[[1]]
-    for (word in words) {
-      wordidx = which(AllWords == word)
-      thisdiscoursefrequency = thisdiscoursefrequency + tym_m[wordidx, ]
-    }
+  for (discourse in strsplit(wordlists," ")) {
+    w <- match(discourse,m$vocab)
+    thisdiscoursefrequency = colSums(m$term_year[w,]) # equiv. to:
+    #for (word in words) {
+    #  wordidx = which(AllWords == word)
+    #  thisdiscoursefrequency = thisdiscoursefrequency + tym_m[wordidx, ]
+    #}
     thisdiscoursefrequency = moving_average((thisdiscoursefrequency / denominator), 2)
-    yseries = c(yseries, thisdiscoursefrequency[1:124])
-    stackorder = c(stackorder, rep(ordercount, 124))
+    yseries = c(yseries, thisdiscoursefrequency)
+    stackorder = c(stackorder, rep(ordercount, length(thisdiscoursefrequency)))
     ordercount = ordercount + 1
   }
   
   
-  df <- data.frame(x = rep(yearsequence, length(wordlists)), y = yseries, vocabulary = as.character(stackorder),  topic = c(rep(wordlists[1],124), rep(wordlists[2],124), rep(wordlists[3], 124), rep(wordlists[4], 124)))
-  levels(df$topic) <- wordlists
+  df <- data.frame(year = rep(as.Date(m$term_year_yseq), length(wordlists)),
+                   weight = yseries,
+                   vocabulary = as.character(stackorder),
+                   topic = rep(wordlists,each=length(m$term_year_yseq)),
+                   stringsAsFactors=F)
+                               #c(rep(wordlists[1],124), rep(wordlists[2],124), rep(wordlists[3], 124), rep(wordlists[4], 124)))
+
+#  levels(df$topic) <- wordlists
+  df$topic <- factor(df$topic, levels=wordlists)
+  
   df$vocabulary <- factor(df$vocabulary, levels = c(1,2,3,4))
   chromatic <- c("gray10", "gray45", "gray80", "gray30")
   
-  p <-ggplot(df, aes(x=x, y=y, group = vocabulary, colour = vocabulary, fill = vocabulary, order = -as.integer(vocabulary)))
+  p <-ggplot(df, aes(x=year, y=weight,
+                     group = vocabulary, colour = vocabulary,
+                     fill = vocabulary,
+                     order = -as.integer(vocabulary))) # factor to int ???
   p <- p + geom_area(aes(colour= vocabulary, fill = vocabulary), position = 'stack') + scale_colour_manual(values=chromatic, guide='none')  + scale_fill_manual(values = chromatic, labels = wordlists)
-  p <- p +
-    xlab("article publication year") +
+  p <- p + ax$xlab + ax$xlim +
     scale_y_continuous(labels=percent_format()) +
     ylab("percentage of words in the whole corpus") +
     plot_theme
