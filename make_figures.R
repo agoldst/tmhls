@@ -36,7 +36,7 @@ add_year_proportion_axes <- function(p,
         xlabel=ax$xlab,
         ylabel="proportion of words in corpus",
         yscale=scale_y_continuous(labels=percent_format())) {
-    p + ax$lim +
+    p + ax$xlim +
         yscale +
         ax$xlab +
         ylab(ylabel)
@@ -514,47 +514,54 @@ alt_fig_power <- function(filename="power.pdf",fig_dir="essay/figure", word = "p
   #   denominator = tym_m[wordidx, ]
   #   print(denominator)
   # this denominator gives "percent of total vocab that is X word in topic Y"
-  denominator = integer(125)
-  for (i in seq(125)) {
-    denominator[i] = sum(tym_m[ , i])
-  }
+  #denominator = integer(125)
+  #for (i in seq(125)) {
+  #  denominator[i] = sum(tym_m[ , i])
+  #}
+  denominator <- colSums(m$term_year) #equivalent
+  allother <- m$term_year[wordidx,] # quicker calculation of allother
   theorder = numeric()
   count = 1
   for(topic in topics) {
     load(file.path(m$model_dir,sprintf("tytm/%03d.rda",topic)))
     tytm_m <- as.matrix(tytm_result$tym)
     termyearvector <- moving_average(((tytm_m[wordidx, ] / denominator)), 2)
-    termyearvector <- termyearvector[1:124]
+    #termyearvector <- termyearvector[1:124]
     yseries = c(yseries, termyearvector)
-    theorder = c(theorder, rep(count, 124))
+    theorder = c(theorder, rep(count, length(termyearvector)))
+    allother <- allother - tytm_result$tym[wordidx,] # quicker than the below
     count = count + 1
   }
   
 
-  allother <- rep(0, 124)
-  for (topic in seq(150)) {
-    if (!topic %in% topics) {
-      load(file.path(m$model_dir,sprintf("tytm/%03d.rda",topic)))
-      tytm_m <- as.matrix(tytm_result$tym)
-      termyearvector <- ((tytm_m[wordidx, ] / denominator))
-      allother <- allother + termyearvector[1:124]
-    }
-  }
+#  allother <- rep(0, 124)
+#  for (topic in seq(150)) {
+#    if (!topic %in% topics) {
+#      load(file.path(m$model_dir,sprintf("tytm/%03d.rda",topic)))
+#      tytm_m <- as.matrix(tytm_result$tym)
+#      termyearvector <- ((tytm_m[wordidx, ] / denominator))
+#      allother <- allother + termyearvector[1:124]
+#    }
+#  }
+  allother <- allother / denominator 
   allother <- moving_average(allother, 2)
   yseries <- c(yseries, allother)
-  theorder = c(theorder, rep(count, 124))
+  theorder = c(theorder, rep(count, length(allother)))
   
-  df <- data.frame(x = rep(yearsequence, 3), y = yseries, topics = as.character(theorder), topic = c(rep(topiclabel[1],124), rep(topiclabel[2],124), rep(topiclabel[3], 124)))
-  levels(df$topic) <- topiclabel
+  df <- data.frame(year = as.Date(rep(m$term_year_yseq, 3)),
+                   weight = yseries,
+                   topics = as.character(theorder),
+                   topic = rep(topiclabel,each=length(allother)))
+  #levels(df$topic) <- topiclabel # does nothing
   df$topics <- factor(df$topics, levels = c(3,2,1))
   
   chromatic <- rev(c("gray10", "gray40", "gray75"))
   
-  p <-ggplot(df, aes(x=x, y=y, group = topics, colour = topics, fill = topics, order = -as.integer(topics)))
+  p <-ggplot(df, aes(x=year, y=weight, group = topics, colour = topics, fill = topics, order = -as.integer(topics)))
   p <- p + geom_area(aes(colour= topics, fill = topics), position='stack') +
     scale_colour_manual(values=chromatic, guide="none")  +
     scale_fill_manual(values = chromatic, labels = rev(topiclabel))
-  p <- p + xlab("article publication year") +
+  p <- p + ax$xlab + ax$xlim +
     scale_y_continuous(labels=percent_format()) +
     ylab("\"power\" as percentage\n of all words in corpus")
   p <- p + plot_theme
