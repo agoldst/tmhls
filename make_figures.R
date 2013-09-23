@@ -563,7 +563,9 @@ alt_fig_power <- function(filename="power.pdf",fig_dir="essay/figure", word = "p
   p <-ggplot(df, aes(x=year, y=weight, group = topics, colour = topics, fill = topics, order = -as.integer(topics)))
   p <- p + geom_area(aes(colour= topics, fill = topics), position='stack') +
     scale_colour_manual(values=chromatic, guide="none")  +
-    scale_fill_manual(values = chromatic, labels = rev(topiclabel))
+    scale_fill_manual(values = chromatic,
+                      labels = rev(topiclabel),
+                      name="topic")
   p <- p + ax$xlab + 
     ax$xlim +
     scale_y_continuous(labels=percent_format()) +
@@ -630,7 +632,7 @@ alt_fig_form <- function(filename="formalism-waves.pdf",fig_dir="essay/figure") 
   p <- p + geom_area(aes(colour= vocabulary, fill = vocabulary), position = 'stack') + scale_colour_manual(values=chromatic, guide='none')  + scale_fill_manual(values = chromatic, labels = wordlists)
   p <- p + ax$xlab + ax$xlim +
     scale_y_continuous(labels=percent_format()) +
-    ylab("percentage of words in the whole corpus") +
+    ylab("proportion of words in corpus") +
     plot_theme
 
   render_plot(p,filename, fig_dir,
