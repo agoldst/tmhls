@@ -4,4 +4,4 @@ The R code depends on general-use functions found in a companion repository, [df
 
 We are not able to release our source data, but we will supply the necessary JSTOR Data for Research queries on request. The topic models we generated are also available on request.
 
-This repository's history has been edited to remove drafts of our essay in progress.
+This repository's history has been edited to remove drafts of our forthcoming essay. A preprint version that essay, forthcoming in *New Literary History*, may be found at <https://www.ideals.illinois.edu/handle/2142/49323>.
